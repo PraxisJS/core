@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PraxisJS vs Alpine.js DOM Benchmark</title>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="../dist/praxis.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .benchmark { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .results { margin-top: 10px; padding: 10px; background: #f5f5f5; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h1>PraxisJS vs Alpine.js DOM Benchmark</h1>
+    
+    <div class="benchmark">
+        <h3>1. List Rendering Performance</h3>
+        <p>Renders 1000 items and measures time</p>
+        
+        <div id="alpine-list-test" x-data="{ items: [] }" style="display: none;">
+            <template x-for="item in items" :key="item.id">
+                <div x-text="item.name"></div>
+            </template>
+        </div>
+        
+        <div id="praxis-list-test" x-data="{ items: [] }" style="display: none;">
+            <template x-for="item in items" :key="item.id">
+                <div x-text="item.name"></div>
+            </template>
+        </div>
+        
+        <button onclick="runListBenchmark()">Run List Benchmark</button>
+        <div id="list-results" class="results hidden"></div>
+    </div>
+    
+    <div class="benchmark">
+        <h3>2. Reactivity Performance</h3>
+        <p>Updates a signal 1000 times and measures DOM update time</p>
+        
+        <div id="alpine-reactivity" x-data="{ count: 0 }" style="display: none;">
+            <span x-text="count"></span>
+        </div>
+        
+        <div id="praxis-reactivity" x-data="{ count: 0 }" style="display: none;">
+            <span x-text="count"></span>
+        </div>
+        
+        <button onclick="runReactivityBenchmark()">Run Reactivity Benchmark</button>
+        <div id="reactivity-results" class="results hidden"></div>
+    </div>
+    
+    <div class="benchmark">
+        <h3>3. Conditional Rendering</h3>
+        <p>Toggles 500 elements visibility</p>
+        
+        <div id="alpine-conditional" x-data="{ items: [] }">
+            <template x-for="item in items">
+                <div x-show="item.visible" x-text="item.name"></div>
+            </template>
+        </div>
+        
+        <div id="praxis-conditional" x-data="{ items: [] }">
+            <template x-for="item in items">
+                <div x-show="item.visible" x-text="item.name"></div>
+            </template>
+        </div>
+        
+        <button onclick="runConditionalBenchmark()">Run Conditional Benchmark</button>
+        <div id="conditional-results" class="results hidden"></div>
+    </div>
+    
+    <div id="overall-results" class="results hidden">
+        <h3>Overall Results</h3>
+        <div id="summary"></div>
+    </div>
+
+    <script>
+        let benchmarkResults = {};
+        
+        function generateItems(count) {
+            return Array.from({ length: count }, (_, i) => ({
+                id: i,
+                name: `Item ${i}`,
+                visible: Math.random() > 0.5
+            }));
+        }
+        
+        async function measureTime(fn) {
+            const start = performance.now();
+            await fn();
+            const end = performance.now();
+            return end - start;
+        }
+        
+        async function runListBenchmark() {
+            const items = generateItems(1000);
+            
+            // Alpine.js test
+            const alpineTime = await measureTime(async () => {
+                const alpineEl = document.querySelector('#alpine-list-test');
+                alpineEl._x_dataStack = [{ items }];
+                alpineEl.style.display = 'block';
+                await new Promise(resolve => setTimeout(resolve, 100));
+                alpineEl.style.display = 'none';
+            });
+            
+            // PraxisJS test
+            const praxisTime = await measureTime(async () => {
+                const praxisEl = document.querySelector('#praxis-list-test');
+                if (praxisEl._praxisScope) {
+                    praxisEl._praxisScope.items.value = items;
+                }
+                praxisEl.style.display = 'block';
+                await new Promise(resolve => setTimeout(resolve, 100));
+                praxisEl.style.display = 'none';
+            });
+            
+            benchmarkResults.list = { alpine: alpineTime, praxis: praxisTime };
+            
+            document.getElementById('list-results').innerHTML = `
+                <strong>List Rendering (1000 items):</strong><br>
+                Alpine.js: ${alpineTime.toFixed(2)}ms<br>
+                PraxisJS: ${praxisTime.toFixed(2)}ms<br>
+                <strong>Winner: ${praxisTime < alpineTime ? 'PraxisJS' : 'Alpine.js'} 
+                (${Math.abs(((praxisTime - alpineTime) / alpineTime * 100)).toFixed(1)}% ${praxisTime < alpineTime ? 'faster' : 'slower'})</strong>
+            `;
+            document.getElementById('list-results').classList.remove('hidden');
+            
+            updateOverallResults();
+        }
+        
+        async function runReactivityBenchmark() {
+            const iterations = 1000;
+            
+            // Alpine.js test
+            const alpineTime = await measureTime(async () => {
+                const alpineEl = document.querySelector('#alpine-reactivity');
+                for (let i = 0; i < iterations; i++) {
+                    if (alpineEl._x_dataStack && alpineEl._x_dataStack[0]) {
+                        alpineEl._x_dataStack[0].count = i;
+                    }
+                }
+                await new Promise(resolve => setTimeout(resolve, 50));
+            });
+            
+            // PraxisJS test
+            const praxisTime = await measureTime(async () => {
+                const praxisEl = document.querySelector('#praxis-reactivity');
+                if (praxisEl._praxisScope) {
+                    for (let i = 0; i < iterations; i++) {
+                        praxisEl._praxisScope.count.value = i;
+                    }
+                }
+                await new Promise(resolve => setTimeout(resolve, 50));
+            });
+            
+            benchmarkResults.reactivity = { alpine: alpineTime, praxis: praxisTime };
+            
+            document.getElementById('reactivity-results').innerHTML = `
+                <strong>Reactivity (${iterations} updates):</strong><br>
+                Alpine.js: ${alpineTime.toFixed(2)}ms<br>
+                PraxisJS: ${praxisTime.toFixed(2)}ms<br>
+                <strong>Winner: ${praxisTime < alpineTime ? 'PraxisJS' : 'Alpine.js'} 
+                (${Math.abs(((praxisTime - alpineTime) / alpineTime * 100)).toFixed(1)}% ${praxisTime < alpineTime ? 'faster' : 'slower'})</strong>
+            `;
+            document.getElementById('reactivity-results').classList.remove('hidden');
+            
+            updateOverallResults();
+        }
+        
+        async function runConditionalBenchmark() {
+            const items = generateItems(500);
+            
+            // Alpine.js test
+            const alpineTime = await measureTime(async () => {
+                const alpineEl = document.querySelector('#alpine-conditional');
+                alpineEl._x_dataStack = [{ items }];
+                
+                // Toggle visibility
+                for (let i = 0; i < 10; i++) {
+                    items.forEach(item => item.visible = !item.visible);
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                }
+            });
+            
+            // PraxisJS test  
+            const praxisTime = await measureTime(async () => {
+                const praxisEl = document.querySelector('#praxis-conditional');
+                if (praxisEl._praxisScope) {
+                    praxisEl._praxisScope.items.value = items;
+                    
+                    // Toggle visibility
+                    for (let i = 0; i < 10; i++) {
+                        items.forEach(item => item.visible = !item.visible);
+                        praxisEl._praxisScope.items.value = [...items];
+                        await new Promise(resolve => setTimeout(resolve, 10));
+                    }
+                }
+            });
+            
+            benchmarkResults.conditional = { alpine: alpineTime, praxis: praxisTime };
+            
+            document.getElementById('conditional-results').innerHTML = `
+                <strong>Conditional Rendering (500 items, 10 toggles):</strong><br>
+                Alpine.js: ${alpineTime.toFixed(2)}ms<br>
+                PraxisJS: ${praxisTime.toFixed(2)}ms<br>
+                <strong>Winner: ${praxisTime < alpineTime ? 'PraxisJS' : 'Alpine.js'} 
+                (${Math.abs(((praxisTime - alpineTime) / alpineTime * 100)).toFixed(1)}% ${praxisTime < alpineTime ? 'faster' : 'slower'})</strong>
+            `;
+            document.getElementById('conditional-results').classList.remove('hidden');
+            
+            updateOverallResults();
+        }
+        
+        function updateOverallResults() {
+            if (Object.keys(benchmarkResults).length < 3) return;
+            
+            let praxisWins = 0;
+            let alpineWins = 0;
+            let totalCoralTime = 0;
+            let totalAlpineTime = 0;
+            
+            Object.values(benchmarkResults).forEach(result => {
+                if (result.praxis < result.alpine) praxisWins++;
+                else alpineWins++;
+                
+                totalCoralTime += result.praxis;
+                totalAlpineTime += result.alpine;
+            });
+            
+            const overallWinner = totalCoralTime < totalAlpineTime ? 'PraxisJS' : 'Alpine.js';
+            const improvement = Math.abs(((totalCoralTime - totalAlpineTime) / totalAlpineTime * 100)).toFixed(1);
+            
+            document.getElementById('summary').innerHTML = `
+                <strong>Benchmark Summary:</strong><br>
+                PraxisJS wins: ${praxisWins}/3 benchmarks<br>
+                Alpine.js wins: ${alpineWins}/3 benchmarks<br>
+                Total PraxisJS time: ${totalCoralTime.toFixed(2)}ms<br>
+                Total Alpine.js time: ${totalAlpineTime.toFixed(2)}ms<br>
+                <strong>Overall Winner: ${overallWinner} (${improvement}% ${totalCoralTime < totalAlpineTime ? 'faster' : 'slower'})</strong>
+            `;
+            document.getElementById('overall-results').classList.remove('hidden');
+        }
+        
+        // Initialize PraxisJS when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.PraxisJS) {
+                PraxisJS.start();
+            }
+        });
+    </script>
+</body>
+</html>

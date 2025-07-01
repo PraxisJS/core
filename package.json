@@ -1,0 +1,126 @@
+{
+  "name": "@oxog/praxis",
+  "version": "1.0.0",
+  "description": "A high-performance reactive JavaScript framework with enterprise-grade features for modern web applications",
+  "main": "dist/praxis.js",
+  "module": "dist/praxis.esm.js",
+  "types": "dist/types/index.d.ts",
+  "browser": "dist/praxis.min.js",
+  "unpkg": "dist/praxis.min.js",
+  "jsdelivr": "dist/praxis.min.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "docs"
+  ],
+  "scripts": {
+    "build": "npm run clean && rollup -c",
+    "build:dev": "rollup -c --environment NODE_ENV:development",
+    "build:prod": "rollup -c --environment NODE_ENV:production", 
+    "clean": "rm -rf dist",
+    "dev": "rollup -c -w",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "playwright test",
+    "test:security": "vitest run tests/security",
+    "test:accessibility": "vitest run tests/accessibility", 
+    "test:performance": "vitest run tests/performance",
+    "test:all": "npm run test && npm run test:e2e",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src tests --ext .ts,.js",
+    "lint:fix": "eslint src tests --ext .ts,.js --fix",
+    "format": "prettier --write \"src/**/*.{ts,js}\" \"tests/**/*.{ts,js}\" \"*.{json,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,js}\" \"tests/**/*.{ts,js}\" \"*.{json,md}\"",
+    "docs:build": "typedoc",
+    "docs:api": "typedoc --out docs/api src/index.ts",
+    "benchmark": "node benchmarks/run.js",
+    "size": "bundlesize",
+    "size:analyze": "npm run build && npx rollup-plugin-visualizer dist/stats.html",
+    "prepublishOnly": "npm run build && npm run test:all && npm run lint && npm run size",
+    "release": "./scripts/release.sh",
+    "version": "./scripts/version.sh"
+  },
+  "keywords": [
+    "reactive",
+    "javascript",
+    "framework",
+    "signals",
+    "dom",
+    "web",
+    "frontend",
+    "ui",
+    "lightweight",
+    "performance",
+    "security",
+    "accessibility",
+    "enterprise",
+    "praxis"
+  ],
+  "author": "PraxisJS Team <team@praxisjs.com>",
+  "license": "MIT",
+  "homepage": "https://praxisjs.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/praxisjs/core.git"
+  },
+  "bugs": {
+    "url": "https://github.com/praxisjs/core/issues"
+  },
+  "funding": {
+    "type": "opencollective", 
+    "url": "https://opencollective.com/praxisjs"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "browserslist": [
+    "defaults",
+    "not ie 11",
+    "not op_mini all",
+    "Chrome >= 63",
+    "Firefox >= 60", 
+    "Safari >= 13",
+    "Edge >= 79"
+  ],
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.5",
+    "@types/node": "^20.9.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.1",
+    "@typescript-eslint/parser": "^6.13.1",
+    "@vitest/coverage-v8": "^1.0.4",
+    "@vitest/ui": "^1.0.4",
+    "bundlesize": "^0.18.1",
+    "eslint": "^8.54.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.1",
+    "happy-dom": "^12.10.3",
+    "prettier": "^3.1.0",
+    "rollup": "^4.6.1",
+    "rollup-plugin-dts": "^6.1.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "rollup-plugin-visualizer": "^5.9.2",
+    "typedoc": "^0.25.4",
+    "typescript": "^5.3.2",
+    "vitest": "^1.0.4"
+  },
+  "dependencies": {},
+  "bundlesize": [
+    {
+      "path": "./dist/praxis.min.js",
+      "maxSize": "9 kB"
+    },
+    {
+      "path": "./dist/praxis.esm.js",
+      "maxSize": "12 kB"
+    }
+  ]
+}

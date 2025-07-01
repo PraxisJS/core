@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PraxisJS Showcase - Complete Feature Demo</title>
+    <meta name="description" content="Comprehensive demonstration of all PraxisJS features">
+    
+    <!-- PraxisJS CSS -->
+    <link rel="stylesheet" href="./styles.css">
+    
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+    
+    <!-- Accessibility -->
+    <meta name="theme-color" content="#0066cc">
+    <link rel="preload" href="./app.js" as="script">
+</head>
+<body>
+    <!-- Skip Links -->
+    <a href="#main" class="skip-link">Skip to main content</a>
+    <a href="#nav" class="skip-link">Skip to navigation</a>
+    
+    <!-- App Container -->
+    <div id="app" x-data="AppData()" x-cloak>
+        <!-- Header -->
+        <header x-data="HeaderComponent()" class="header">
+            <nav id="nav" role="navigation" aria-label="Main navigation">
+                <div class="nav-brand">
+                    <h1>PraxisJS Showcase</h1>
+                </div>
+                
+                <!-- Theme Toggle -->
+                <div x-data="ThemeToggle()">
+                    <button 
+                        x-on:click="toggleTheme()"
+                        x-bind:aria-label="'Switch to ' + (isDark ? 'light' : 'dark') + ' theme'"
+                        class="theme-toggle"
+                        x-hotkey="'ctrl+shift+t'"
+                    >
+                        <span x-show="!isDark">🌙</span>
+                        <span x-show="isDark">☀️</span>
+                    </button>
+                </div>
+                
+                <!-- Accessibility Controls -->
+                <div class="a11y-controls">
+                    <button 
+                        x-on:click="toggleReducedMotion()"
+                        x-bind:aria-pressed="reducedMotion.toString()"
+                        aria-label="Toggle reduced motion"
+                    >
+                        Motion: <span x-text="reducedMotion ? 'Reduced' : 'Normal'"></span>
+                    </button>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main id="main" role="main" class="main-content">
+            <!-- Feature Showcase Tabs -->
+            <div x-data="TabsComponent()" class="tabs-container">
+                <div role="tablist" class="tabs" aria-label="Feature demonstrations">
+                    <template x-for="(tab, index) in tabs" :key="tab.id">
+                        <button
+                            role="tab"
+                            x-bind:id="'tab-' + tab.id"
+                            x-bind:aria-controls="'panel-' + tab.id"
+                            x-bind:aria-selected="(activeTab === index).toString()"
+                            x-bind:tabindex="activeTab === index ? 0 : -1"
+                            x-on:click="selectTab(index)"
+                            x-on:keydown.arrow-left="selectPreviousTab()"
+                            x-on:keydown.arrow-right="selectNextTab()"
+                            x-on:keydown.home="selectFirstTab()"
+                            x-on:keydown.end="selectLastTab()"
+                            x-text="tab.title"
+                            class="tab"
+                            x-bind:class="{ 'active': activeTab === index }"
+                        ></button>
+                    </template>
+                </div>
+
+                <!-- Tab Panels -->
+                <div class="tab-panels">
+                    <!-- Core Directives Demo -->
+                    <div 
+                        role="tabpanel"
+                        id="panel-core"
+                        aria-labelledby="tab-core"
+                        x-show="activeTab === 0"
+                        x-transition
+                        class="tab-panel"
+                    >
+                        <h2>Core Directives</h2>
+                        
+                        <!-- Counter Example -->
+                        <section x-data="CounterComponent()" class="demo-section">
+                            <h3>Basic Reactivity (x-data, x-text, x-on)</h3>
+                            <div class="counter">
+                                <button x-on:click="decrement()" aria-label="Decrease count">-</button>
+                                <span x-text="count" class="count" aria-live="polite"></span>
+                                <button x-on:click="increment()" aria-label="Increase count">+</button>
+                            </div>
+                            <button x-on:click="reset()" class="reset-btn">Reset</button>
+                        </section>
+
+                        <!-- Form Handling -->
+                        <section x-data="FormComponent()" class="demo-section">
+                            <h3>Form Handling (x-model, x-show, x-if)</h3>
+                            <form x-on:submit.prevent="submitForm()" class="demo-form">
+                                <div class="form-group">
+                                    <label for="username">Username:</label>
+                                    <input 
+                                        id="username"
+                                        type="text" 
+                                        x-model="form.username"
+                                        x-bind:class="{ 'error': errors.username }"
+                                        aria-describedby="username-error"
+                                        required
+                                    >
+                                    <div 
+                                        id="username-error" 
+                                        x-show="errors.username" 
+                                        x-text="errors.username"
+                                        class="error-message"
+                                        role="alert"
+                                    ></div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="email">Email:</label>
+                                    <input 
+                                        id="email"
+                                        type="email" 
+                                        x-model="form.email"
+                                        x-bind:class="{ 'error': errors.email }"
+                                        aria-describedby="email-error"
+                                        required
+                                    >
+                                    <div 
+                                        id="email-error"
+                                        x-show="errors.email" 
+                                        x-text="errors.email"
+                                        class="error-message"
+                                        role="alert"
+                                    ></div>
+                                </div>
+                                
+                                <button type="submit" x-bind:disabled="isSubmitting">
+                                    <span x-show="!isSubmitting">Submit</span>
+                                    <span x-show="isSubmitting">Submitting...</span>
+                                </button>
+                            </form>
+                            
+                            <div x-show="submitted" x-transition class="success-message" role="alert">
+                                Form submitted successfully!
+                            </div>
+                        </section>
+
+                        <!-- List Rendering -->
+                        <section x-data="ListComponent()" class="demo-section">
+                            <h3>List Rendering (x-for)</h3>
+                            <div class="list-controls">
+                                <input 
+                                    type="text" 
+                                    x-model="newItem" 
+                                    x-on:keydown.enter="addItem()"
+                                    placeholder="Add new item"
+                                    aria-label="New item text"
+                                >
+                                <button x-on:click="addItem()" x-bind:disabled="!newItem.trim()">Add</button>
+                            </div>
+                            
+                            <ul class="item-list" aria-live="polite">
+                                <template x-for="(item, index) in items" :key="item.id">
+                                    <li class="item" x-transition>
+                                        <span x-text="item.text"></span>
+                                        <button 
+                                            x-on:click="removeItem(index)"
+                                            x-bind:aria-label="'Remove ' + item.text"
+                                            class="remove-btn"
+                                        >×</button>
+                                    </li>
+                                </template>
+                            </ul>
+                            
+                            <p x-show="items.length === 0" class="empty-state">No items yet. Add one above!</p>
+                        </section>
+                    </div>
+
+                    <!-- Advanced Directives Demo -->
+                    <div 
+                        role="tabpanel"
+                        id="panel-advanced"
+                        aria-labelledby="tab-advanced"
+                        x-show="activeTab === 1"
+                        x-transition
+                        class="tab-panel"
+                    >
+                        <h2>Advanced Directives</h2>
+                        
+                        <!-- Intersection Observer -->
+                        <section x-data="IntersectionDemo()" class="demo-section">
+                            <h3>Intersection Observer (x-intersect)</h3>
+                            <div class="scroll-container" style="height: 200px; overflow-y: scroll;">
+                                <div style="height: 300px; padding: 20px;">
+                                    <p>Scroll down to see the intersection demo...</p>
+                                </div>
+                                <div 
+                                    x-intersect="handleIntersection"
+                                    x-bind:class="{ 'visible': isVisible }"
+                                    class="intersection-target"
+                                >
+                                    <p x-text="isVisible ? 'I am visible!' : 'I am hidden'"></p>
+                                </div>
+                                <div style="height: 300px; padding: 20px;">
+                                    <p>Keep scrolling...</p>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Click Away -->
+                        <section x-data="ClickAwayDemo()" class="demo-section">
+                            <h3>Click Away Detection (x-clickaway)</h3>
+                            <button x-on:click="open = true" x-show="!open">Open Modal</button>
+                            <div 
+                                x-show="open"
+                                x-clickaway="open = false"
+                                x-transition
+                                class="modal-overlay"
+                                role="dialog"
+                                aria-modal="true"
+                                aria-labelledby="modal-title"
+                                x-focus-trap
+                            >
+                                <div class="modal">
+                                    <h4 id="modal-title">Modal Dialog</h4>
+                                    <p>Click outside this modal to close it.</p>
+                                    <button x-on:click="open = false">Close</button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Resize Observer -->
+                        <section x-data="ResizeDemo()" class="demo-section">
+                            <h3>Resize Observer (x-resize)</h3>
+                            <div 
+                                x-resize="handleResize"
+                                class="resizable-area"
+                                style="resize: both; overflow: auto; border: 1px solid #ccc; min-height: 100px; min-width: 200px;"
+                            >
+                                <p>Resize this area and watch the dimensions update:</p>
+                                <p>Width: <span x-text="width"></span>px</p>
+                                <p>Height: <span x-text="height"></span>px</p>
+                            </div>
+                        </section>
+
+                        <!-- Hotkeys -->
+                        <section x-data="HotkeyDemo()" class="demo-section">
+                            <h3>Keyboard Shortcuts (x-hotkey)</h3>
+                            <div 
+                                x-hotkey="'ctrl+k'"
+                                x-on:keydown="handleHotkey($event)"
+                                tabindex="0"
+                                class="hotkey-area"
+                                aria-label="Press Ctrl+K to trigger action"
+                            >
+                                <p>Focus this area and press <kbd>Ctrl+K</kbd></p>
+                                <p x-show="triggered" x-transition class="hotkey-triggered">
+                                    Hotkey triggered! <span x-text="triggerCount"></span> times
+                                </p>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Store Management Demo -->
+                    <div 
+                        role="tabpanel"
+                        id="panel-store"
+                        aria-labelledby="tab-store"
+                        x-show="activeTab === 2"
+                        x-transition
+                        class="tab-panel"
+                    >
+                        <h2>Store Management</h2>
+                        
+                        <!-- Todo Store -->
+                        <section x-data="TodoStoreDemo()" class="demo-section">
+                            <h3>Todo Store with Computed Getters</h3>
+                            
+                            <div class="todo-controls">
+                                <input 
+                                    type="text" 
+                                    x-model="newTodo"
+                                    x-on:keydown.enter="addTodo()"
+                                    placeholder="Add a new todo"
+                                    aria-label="New todo text"
+                                >
+                                <button x-on:click="addTodo()" x-bind:disabled="!newTodo.trim()">Add Todo</button>
+                            </div>
+                            
+                            <div class="todo-filters">
+                                <button 
+                                    x-on:click="setFilter('all')"
+                                    x-bind:class="{ 'active': filter === 'all' }"
+                                    x-bind:aria-pressed="(filter === 'all').toString()"
+                                >
+                                    All (<span x-text="totalCount"></span>)
+                                </button>
+                                <button 
+                                    x-on:click="setFilter('active')"
+                                    x-bind:class="{ 'active': filter === 'active' }"
+                                    x-bind:aria-pressed="(filter === 'active').toString()"
+                                >
+                                    Active (<span x-text="activeCount"></span>)
+                                </button>
+                                <button 
+                                    x-on:click="setFilter('completed')"
+                                    x-bind:class="{ 'active': filter === 'completed' }"
+                                    x-bind:aria-pressed="(filter === 'completed').toString()"
+                                >
+                                    Completed (<span x-text="completedCount"></span>)
+                                </button>
+                            </div>
+                            
+                            <ul class="todo-list" aria-live="polite">
+                                <template x-for="todo in filteredTodos" :key="todo.id">
+                                    <li class="todo-item" x-bind:class="{ 'completed': todo.completed }">
+                                        <input 
+                                            type="checkbox" 
+                                            x-model="todo.completed"
+                                            x-bind:id="'todo-' + todo.id"
+                                            x-bind:aria-label="'Mark ' + todo.text + ' as ' + (todo.completed ? 'incomplete' : 'complete')"
+                                        >
+                                        <label x-bind:for="'todo-' + todo.id" x-text="todo.text"></label>
+                                        <button 
+                                            x-on:click="removeTodo(todo.id)"
+                                            x-bind:aria-label="'Remove ' + todo.text"
+                                            class="remove-btn"
+                                        >Delete</button>
+                                    </li>
+                                </template>
+                            </ul>
+                            
+                            <div x-show="todos.length === 0" class="empty-state">
+                                No todos yet. Add one above!
+                            </div>
+                        </section>
+
+                        <!-- User Store -->
+                        <section x-data="UserStoreDemo()" class="demo-section">
+                            <h3>User Store with Async Actions</h3>
+                            
+                            <div class="user-controls">
+                                <button 
+                                    x-on:click="fetchUsers()"
+                                    x-bind:disabled="loading"
+                                    class="fetch-btn"
+                                >
+                                    <span x-show="!loading">Fetch Users</span>
+                                    <span x-show="loading">Loading...</span>
+                                </button>
+                                
+                                <button x-on:click="clearUsers()" x-bind:disabled="users.length === 0">
+                                    Clear Users
+                                </button>
+                            </div>
+                            
+                            <div x-show="error" x-transition class="error-message" role="alert">
+                                <p x-text="error"></p>
+                            </div>
+                            
+                            <div x-show="users.length > 0" class="user-list">
+                                <h4>Users (<span x-text="userCount"></span>)</h4>
+                                <ul>
+                                    <template x-for="user in users" :key="user.id">
+                                        <li class="user-item">
+                                            <strong x-text="user.name"></strong>
+                                            <span x-text="user.email"></span>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Accessibility Demo -->
+                    <div 
+                        role="tabpanel"
+                        id="panel-accessibility"
+                        aria-labelledby="tab-accessibility"
+                        x-show="activeTab === 3"
+                        x-transition
+                        class="tab-panel"
+                    >
+                        <h2>Accessibility Features</h2>
+                        
+                        <!-- Live Regions -->
+                        <section x-data="LiveRegionDemo()" class="demo-section">
+                            <h3>ARIA Live Regions (x-live-region)</h3>
+                            
+                            <div class="live-region-controls">
+                                <button x-on:click="announceMessage('polite')">Announce Politely</button>
+                                <button x-on:click="announceMessage('assertive')">Announce Assertively</button>
+                                <button x-on:click="clearAnnouncement()">Clear</button>
+                            </div>
+                            
+                            <div 
+                                x-live-region.polite
+                                x-text="message"
+                                class="live-region"
+                                aria-label="Live announcements"
+                            ></div>
+                            
+                            <p class="note">Screen readers will announce messages placed in the live region above.</p>
+                        </section>
+
+                        <!-- Focus Management -->
+                        <section x-data="FocusDemo()" class="demo-section">
+                            <h3>Focus Management (x-focus-trap)</h3>
+                            
+                            <button x-on:click="openDialog()" x-show="!dialogOpen">Open Dialog</button>
+                            
+                            <div 
+                                x-show="dialogOpen"
+                                x-transition
+                                class="dialog-overlay"
+                                role="dialog"
+                                aria-modal="true"
+                                aria-labelledby="dialog-title"
+                                x-focus-trap.auto
+                            >
+                                <div class="dialog">
+                                    <h4 id="dialog-title">Focus Trapped Dialog</h4>
+                                    <p>Tab through these elements. Focus is trapped within this dialog.</p>
+                                    <input type="text" placeholder="First input" aria-label="First input">
+                                    <input type="text" placeholder="Second input" aria-label="Second input">
+                                    <div class="dialog-actions">
+                                        <button x-on:click="closeDialog()">Cancel</button>
+                                        <button x-on:click="closeDialog()" class="primary">OK</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Color Contrast Validation -->
+                        <section x-data="ContrastDemo()" class="demo-section">
+                            <h3>Color Contrast Validation</h3>
+                            
+                            <div class="contrast-controls">
+                                <label for="fg-color">Foreground Color:</label>
+                                <input 
+                                    id="fg-color"
+                                    type="color" 
+                                    x-model="foregroundColor"
+                                    x-on:input="checkContrast()"
+                                >
+                                
+                                <label for="bg-color">Background Color:</label>
+                                <input 
+                                    id="bg-color"
+                                    type="color" 
+                                    x-model="backgroundColor"
+                                    x-on:input="checkContrast()"
+                                >
+                            </div>
+                            
+                            <div 
+                                class="contrast-sample"
+                                x-bind:style="'color: ' + foregroundColor + '; background-color: ' + backgroundColor"
+                            >
+                                Sample Text for Testing
+                            </div>
+                            
+                            <div class="contrast-results" x-show="contrastResult">
+                                <p>Contrast Ratio: <strong x-text="contrastResult?.ratio"></strong></p>
+                                <p>WCAG Level: <strong x-text="contrastResult?.level"></strong></p>
+                                <p x-text="contrastResult?.passes ? '✓ Passes accessibility guidelines' : '✗ Fails accessibility guidelines'"
+                                   x-bind:class="contrastResult?.passes ? 'success' : 'error'"></p>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Performance Demo -->
+                    <div 
+                        role="tabpanel"
+                        id="panel-performance"
+                        aria-labelledby="tab-performance"
+                        x-show="activeTab === 4"
+                        x-transition
+                        class="tab-panel"
+                    >
+                        <h2>Performance Monitoring</h2>
+                        
+                        <!-- Performance Metrics -->
+                        <section x-data="PerformanceDemo()" class="demo-section">
+                            <h3>Performance Monitoring</h3>
+                            
+                            <div class="performance-controls">
+                                <button x-on:click="runPerformanceTest()">Run Performance Test</button>
+                                <button x-on:click="measureMemory()">Measure Memory</button>
+                                <button x-on:click="simulateSlowOperation()">Simulate Slow Operation</button>
+                            </div>
+                            
+                            <div x-show="performanceData" class="performance-results">
+                                <h4>Performance Metrics</h4>
+                                <ul>
+                                    <li>Render Time: <span x-text="performanceData?.renderTime"></span>ms</li>
+                                    <li>Memory Usage: <span x-text="performanceData?.memoryUsage"></span>MB</li>
+                                    <li>Component Count: <span x-text="performanceData?.componentCount"></span></li>
+                                </ul>
+                            </div>
+                            
+                            <div x-show="slowOperationRunning" x-transition class="loading-indicator">
+                                Running slow operation...
+                            </div>
+                        </section>
+
+                        <!-- Error Boundary Demo -->
+                        <section x-data="ErrorBoundaryDemo()" class="demo-section">
+                            <h3>Error Boundaries</h3>
+                            
+                            <div class="error-controls">
+                                <button x-on:click="triggerError()">Trigger Error</button>
+                                <button x-on:click="triggerAsyncError()">Trigger Async Error</button>
+                                <button x-on:click="resetError()" x-show="hasError">Reset</button>
+                            </div>
+                            
+                            <div x-show="!hasError" class="error-prone-component">
+                                <p>This component can throw errors for demonstration.</p>
+                                <p>Current state: <span x-text="status"></span></p>
+                            </div>
+                            
+                            <div x-show="hasError" x-transition class="error-boundary">
+                                <h4>⚠️ Something went wrong</h4>
+                                <p>An error occurred in this component.</p>
+                                <details>
+                                    <summary>Error Details</summary>
+                                    <pre x-text="errorMessage"></pre>
+                                </details>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>&copy; 2024 PraxisJS Showcase. Demonstrating reactive web development.</p>
+                <p>
+                    <a href="https://github.com/praxisjs/core" target="_blank" rel="noopener">GitHub</a> |
+                    <a href="https://praxisjs.dev/docs" target="_blank" rel="noopener">Documentation</a> |
+                    <a href="https://praxisjs.dev/examples" target="_blank" rel="noopener">More Examples</a>
+                </p>
+            </div>
+        </footer>
+
+        <!-- Live Region for Global Announcements -->
+        <div 
+            id="global-announcements"
+            aria-live="polite"
+            aria-atomic="false"
+            class="sr-only"
+        ></div>
+    </div>
+
+    <!-- Load PraxisJS -->
+    <script type="module" src="./app.js"></script>
+</body>
+</html>
