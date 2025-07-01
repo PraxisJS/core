@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Praxis - Todo List Example</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f0f4f8;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2d3748;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .add-todo {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .add-todo input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        .add-todo input:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+        .add-todo button {
+            padding: 12px 24px;
+            background: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .add-todo button:hover {
+            background: #3182ce;
+        }
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .filters button {
+            padding: 8px 16px;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filters button.active {
+            background: #4299e1;
+            color: white;
+        }
+        .todo-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f7fafc;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .todo-item:hover {
+            background: #edf2f7;
+        }
+        .todo-item.completed {
+            opacity: 0.6;
+        }
+        .todo-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+        .todo-text {
+            flex: 1;
+            font-size: 16px;
+            color: #2d3748;
+        }
+        .todo-item.completed .todo-text {
+            text-decoration: line-through;
+            color: #718096;
+        }
+        .delete-btn {
+            padding: 6px 12px;
+            background: #e53e3e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .delete-btn:hover {
+            background: #c53030;
+        }
+        .stats {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            color: #718096;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #a0aec0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" x-data="{
+        todos: [
+            { id: 1, text: 'Learn Praxis framework', completed: false },
+            { id: 2, text: 'Build awesome apps', completed: false }
+        ],
+        newTodo: '',
+        filter: 'all',
+        addTodo() {
+            if (this.newTodo.trim()) {
+                this.todos.push({
+                    id: Date.now(),
+                    text: this.newTodo.trim(),
+                    completed: false
+                });
+                this.newTodo = '';
+            }
+        },
+        toggleTodo(id) {
+            const todo = this.todos.find(t => t.id === id);
+            if (todo) {
+                todo.completed = !todo.completed;
+            }
+        },
+        deleteTodo(id) {
+            this.todos = this.todos.filter(t => t.id !== id);
+        },
+        get filteredTodos() {
+            if (this.filter === 'active') {
+                return this.todos.filter(t => !t.completed);
+            }
+            if (this.filter === 'completed') {
+                return this.todos.filter(t => t.completed);
+            }
+            return this.todos;
+        },
+        get activeTodoCount() {
+            return this.todos.filter(t => !t.completed).length;
+        },
+        get completedTodoCount() {
+            return this.todos.filter(t => t.completed).length;
+        }
+    }">
+        <h1>📝 Todo List</h1>
+        
+        <div class="add-todo">
+            <input 
+                type="text" 
+                x-model="newTodo"
+                @keyup.enter="addTodo()"
+                placeholder="What needs to be done?"
+            >
+            <button @click="addTodo()">Add Todo</button>
+        </div>
+
+        <div class="filters">
+            <button 
+                @click="filter = 'all'" 
+                :class="{ active: filter === 'all' }"
+            >All</button>
+            <button 
+                @click="filter = 'active'" 
+                :class="{ active: filter === 'active' }"
+            >Active</button>
+            <button 
+                @click="filter = 'completed'" 
+                :class="{ active: filter === 'completed' }"
+            >Completed</button>
+        </div>
+
+        <ul class="todo-list" x-show="filteredTodos.length > 0">
+            <template x-for="todo in filteredTodos" :key="todo.id">
+                <li class="todo-item" :class="{ completed: todo.completed }">
+                    <input 
+                        type="checkbox" 
+                        :checked="todo.completed"
+                        @change="toggleTodo(todo.id)"
+                    >
+                    <span class="todo-text" x-text="todo.text"></span>
+                    <button class="delete-btn" @click="deleteTodo(todo.id)">Delete</button>
+                </li>
+            </template>
+        </ul>
+
+        <div class="empty-state" x-show="filteredTodos.length === 0">
+            <p>No todos found!</p>
+        </div>
+
+        <div class="stats">
+            <span x-text="activeTodoCount"></span> active, 
+            <span x-text="completedTodoCount"></span> completed
+        </div>
+    </div>
+
+    <script src="../../dist/praxis.js"></script>
+</body>
+</html>

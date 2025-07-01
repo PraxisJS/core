@@ -43,7 +43,12 @@
     "size:analyze": "npm run build && npx rollup-plugin-visualizer dist/stats.html",
     "prepublishOnly": "echo 'Publishing with pre-built files'",
     "release": "./scripts/release.sh",
-    "version": "./scripts/version.sh"
+    "release:packages": "node scripts/release.sh",
+    "version": "./scripts/version.sh",
+    "lerna": "lerna",
+    "packages:build": "lerna run build",
+    "packages:test": "lerna run test",
+    "packages:publish": "lerna publish"
   },
   "keywords": [
     "reactive",
@@ -103,6 +108,8 @@
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.1",
     "happy-dom": "^12.10.3",
+    "jsdom": "^23.0.1",
+    "lerna": "^8.0.0",
     "prettier": "^3.1.0",
     "rollup": "^4.6.1",
     "rollup-plugin-dts": "^6.1.0",
@@ -124,5 +131,8 @@
       "path": "./dist/praxis.esm.js",
       "maxSize": "12 kB"
     }
+  ],
+  "workspaces": [
+    "packages/*"
   ]
 }

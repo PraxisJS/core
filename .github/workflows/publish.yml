@@ -1,0 +1,116 @@
+name: Publish Packages
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: 'Packages to publish (comma-separated, or "all")'
+        required: false
+        default: 'all'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x, 20.x]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests
+      run: npm test
+    
+    - name: Run lint
+      run: npm run lint
+    
+    - name: Run type check
+      run: npm run typecheck
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        registry-url: 'https://registry.npmjs.org'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build all packages
+      run: |
+        npm run build
+        for dir in packages/*/; do
+          if [ -f "$dir/package.json" ]; then
+            echo "Building $dir"
+            cd "$dir"
+            if [ -f "package.json" ] && grep -q '"build"' package.json; then
+              npm run build
+            fi
+            cd ../..
+          fi
+        done
+    
+    - name: Configure npm
+      run: |
+        npm config set //registry.npmjs.org/:_authToken=$NODE_AUTH_TOKEN
+        npm whoami
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    
+    - name: Version check
+      id: version_check
+      run: |
+        echo "Checking package versions..."
+        node scripts/check-versions.js
+    
+    - name: Publish packages
+      run: |
+        if [ "${{ github.event.inputs.packages }}" = "all" ] || [ -z "${{ github.event.inputs.packages }}" ]; then
+          node scripts/publish-ci.js --all
+        else
+          node scripts/publish-ci.js --packages "${{ github.event.inputs.packages }}"
+        fi
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        CI: true
+    
+    - name: Create Release
+      if: steps.version_check.outputs.has_changes == 'true'
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.version_check.outputs.version }}
+        release_name: Release v${{ steps.version_check.outputs.version }}
+        body: |
+          ## Changes
+          ${{ steps.version_check.outputs.changelog }}
+          
+          ## Packages Published
+          ${{ steps.version_check.outputs.published_packages }}
+        draft: false
+        prerelease: false

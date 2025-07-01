@@ -355,3 +355,27 @@ MIT License - see [LICENSE](LICENSE) for details.
 - **Website**: [praxisjs.com](https://praxisjs.com)
 - **GitHub**: [github.com/praxijs](https://github.com/praxisjs)
 - **NPM**: [@oxog/praxis](https://www.npmjs.com/package/@oxog/praxis)
+
+## 📦 Ecosystem
+
+Praxis comes with a comprehensive ecosystem of tools and integrations:
+
+### Available Packages
+
+- **[@oxog/praxis](https://www.npmjs.com/package/@oxog/praxis)** - Core framework (Published ✅)
+- **@oxog/praxis-cli** - Command-line interface for scaffolding and development
+- **@oxog/praxis-security** - Enterprise security features (CSP, XSS protection, sanitization)
+- **@oxog/praxis-vite-plugin** - Vite plugin for optimal development experience
+- **@oxog/praxis-webpack-loader** - Webpack loader for production builds
+
+### Coming Soon
+
+- **@oxog/praxis-devtools** - Browser DevTools extension
+- **@oxog/praxis-testing** - Testing utilities and helpers
+- **@oxog/praxis-ui** - Pre-built UI components
+- **@oxog/praxis-router** - Client-side routing
+- **@oxog/praxis-store** - Global state management
+
+### Package Structure
+
+All packages follow the `@oxog/praxis-*` naming convention and are part of the monorepo structure in the `/packages` directory.

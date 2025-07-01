@@ -69,10 +69,104 @@
         if (dataAttr) {
           try {
             const data = new Function('return ' + dataAttr)();
-            el._praxisData = data;
+            // Create reactive data
+            const reactiveData = this.makeReactive(data);
+            el._praxisData = reactiveData;
+            // Process directives
+            this.processDirectives(el);
           } catch (e) {
             console.warn('Invalid x-data:', dataAttr);
           }
+        }
+      });
+    }
+
+    makeReactive(data) {
+      const reactive = {};
+      const watchers = new Map();
+      
+      Object.keys(data).forEach(key => {
+        let value = data[key];
+        
+        Object.defineProperty(reactive, key, {
+          get() {
+            return value;
+          },
+          set(newValue) {
+            value = newValue;
+            // Trigger updates
+            if (watchers.has(key)) {
+              watchers.get(key).forEach(fn => fn());
+            }
+          }
+        });
+      });
+      
+      reactive._watch = (key, fn) => {
+        if (!watchers.has(key)) {
+          watchers.set(key, new Set());
+        }
+        watchers.get(key).add(fn);
+      };
+      
+      return reactive;
+    }
+
+    processDirectives(root) {
+      // Process x-text
+      root.querySelectorAll('[x-text]').forEach(el => {
+        const expr = el.getAttribute('x-text');
+        const update = () => {
+          const data = el.closest('[x-data]')._praxisData;
+          if (data && data[expr] !== undefined) {
+            el.textContent = data[expr];
+          }
+        };
+        update();
+        const data = el.closest('[x-data]')._praxisData;
+        if (data && data._watch) {
+          data._watch(expr, update);
+        }
+      });
+
+      // Process x-show
+      root.querySelectorAll('[x-show]').forEach(el => {
+        const expr = el.getAttribute('x-show');
+        const update = () => {
+          const data = el.closest('[x-data]')._praxisData;
+          if (data && data[expr] !== undefined) {
+            el.style.display = data[expr] ? '' : 'none';
+          }
+        };
+        update();
+        const data = el.closest('[x-data]')._praxisData;
+        if (data && data._watch) {
+          data._watch(expr, update);
+        }
+      });
+
+      // Process x-model
+      root.querySelectorAll('[x-model]').forEach(el => {
+        const expr = el.getAttribute('x-model');
+        const data = el.closest('[x-data]')._praxisData;
+        
+        // Set initial value
+        if (data && data[expr] !== undefined) {
+          el.value = data[expr];
+        }
+        
+        // Listen for input
+        el.addEventListener('input', (e) => {
+          if (data) {
+            data[expr] = e.target.value;
+          }
+        });
+        
+        // Watch for changes
+        if (data && data._watch) {
+          data._watch(expr, () => {
+            el.value = data[expr];
+          });
         }
       });
     }

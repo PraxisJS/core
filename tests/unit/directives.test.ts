@@ -1,9 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { signal } from '../../src/core/signal';
+import { Praxis } from '../../src/praxis';
+import { JSDOM } from 'jsdom';
 
 describe('Directives', () => {
+  let dom: JSDOM;
+  let document: Document;
+  let praxis: Praxis;
+
   beforeEach(() => {
-    document.body.innerHTML = '';
+    dom = new JSDOM('<!DOCTYPE html><body></body>');
+    document = dom.window.document;
+    global.document = document;
+    global.window = dom.window as any;
+    
+    praxis = new Praxis();
   });
 
   describe('x-data directive', () => {

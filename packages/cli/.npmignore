@@ -1,0 +1,14 @@
+src/
+tsconfig.json
+*.ts
+!*.d.ts
+.gitignore
+*.log
+node_modules/
+coverage/
+.vscode/
+.idea/
+*.test.ts
+*.spec.ts
+__tests__/
+vitest.config.ts

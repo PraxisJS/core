@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Praxis Demo - CDN Version</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f0f8ff;
+        }
+        .demo-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #007bff;
+        }
+        .counter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #28a745;
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #218838;
+        }
+        .input-demo input {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            margin: 5px;
+            font-size: 16px;
+        }
+        .input-demo input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        .todo-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            border: 1px solid #eee;
+            margin: 8px 0;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+        .badge {
+            background: #007bff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .alert {
+            padding: 15px;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .signal-demo {
+            background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌐 Praxis Framework Demo - CDN Version</h1>
+    <p>This demo loads Praxis from <strong>unpkg CDN</strong> to showcase production usage.</p>
+    <div class="alert">
+        <strong>CDN URL:</strong> https://unpkg.com/@oxog/praxis@latest/dist/praxis.min.js
+    </div>
+
+    <!-- Signal Demo -->
+    <div class="demo-section" x-data="{ signal: null, count: 0 }">
+        <h2>🔮 Signals Demo</h2>
+        <div class="signal-demo">
+            <p>Praxis Signals in action!</p>
+            <button onclick="
+                const data = this.closest('[x-data]')._praxisData;
+                if (!data.signal) {
+                    data.signal = window.praxis.signal(0);
+                }
+                data.signal.value++;
+                data.count = data.signal.value;
+            ">Increment Signal</button>
+            <p>Signal Value: <strong x-text="count">0</strong></p>
+        </div>
+    </div>
+
+    <!-- Advanced Counter -->
+    <div class="demo-section" x-data="{ count: 0, step: 1 }">
+        <h2>⚡ Advanced Counter</h2>
+        <div style="margin-bottom: 15px;">
+            <label>Step size: </label>
+            <input type="number" 
+                   value="1" 
+                   min="1" 
+                   max="10"
+                   oninput="this.closest('[x-data]')._praxisData.step = parseInt(this.value) || 1">
+        </div>
+        <div class="counter">
+            <button onclick="
+                const data = this.closest('[x-data]')._praxisData;
+                data.count -= data.step;
+            ">- <span class="badge" x-text="step">1</span></button>
+            
+            <span style="font-size: 24px; font-weight: bold;" x-text="count">0</span>
+            
+            <button onclick="
+                const data = this.closest('[x-data]')._praxisData;
+                data.count += data.step;
+            ">+ <span class="badge" x-text="step">1</span></button>
+        </div>
+        <button onclick="this.closest('[x-data]')._praxisData.count = 0" 
+                style="background: #dc3545; margin-top: 10px;">Reset</button>
+    </div>
+
+    <!-- Dynamic Content Demo -->
+    <div class="demo-section" x-data="{ 
+        theme: 'light', 
+        message: 'Welcome to Praxis!',
+        showAdvanced: false 
+    }">
+        <h2>🎨 Dynamic Content</h2>
+        
+        <div style="margin-bottom: 15px;">
+            <button onclick="
+                const data = this.closest('[x-data]')._praxisData;
+                data.theme = data.theme === 'light' ? 'dark' : 'light';
+            ">Toggle Theme: <span x-text="theme">light</span></button>
+            
+            <button onclick="
+                this.closest('[x-data]')._praxisData.showAdvanced = 
+                !this.closest('[x-data]')._praxisData.showAdvanced;
+            ">Toggle Advanced</button>
+        </div>
+
+        <div x-show="showAdvanced" style="padding: 15px; background: #f8f9fa; border-radius: 4px;">
+            <h4>Advanced Options</h4>
+            <input type="text" 
+                   placeholder="Custom message..."
+                   oninput="this.closest('[x-data]')._praxisData.message = this.value || 'Welcome to Praxis!'">
+            <p x-text="message">Welcome to Praxis!</p>
+        </div>
+    </div>
+
+    <!-- Interactive Todo App -->
+    <div class="demo-section" x-data="{ 
+        newTodo: '', 
+        filter: 'all',
+        todos: [
+            { id: 1, text: 'Try Praxis framework', done: true },
+            { id: 2, text: 'Build reactive apps', done: false },
+            { id: 3, text: 'Share with team', done: false }
+        ] 
+    }">
+        <h2>📝 Interactive Todo App</h2>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <input type="text" 
+                   placeholder="What needs to be done?" 
+                   style="flex: 1;"
+                   oninput="this.closest('[x-data]')._praxisData.newTodo = this.value"
+                   onkeypress="
+                       if (event.key === 'Enter') {
+                           const data = this.closest('[x-data]')._praxisData;
+                           if (data.newTodo.trim()) {
+                               data.todos.push({
+                                   id: Date.now(),
+                                   text: data.newTodo.trim(),
+                                   done: false
+                               });
+                               data.newTodo = '';
+                               this.value = '';
+                           }
+                       }
+                   ">
+            <button onclick="
+                const data = this.closest('[x-data]')._praxisData;
+                if (data.newTodo.trim()) {
+                    data.todos.push({
+                        id: Date.now(),
+                        text: data.newTodo.trim(),
+                        done: false
+                    });
+                    data.newTodo = '';
+                    this.previousElementSibling.value = '';
+                }
+            ">Add Todo</button>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <button onclick="this.closest('[x-data]')._praxisData.filter = 'all'" 
+                    style="background: #6c757d;">All</button>
+            <button onclick="this.closest('[x-data]')._praxisData.filter = 'active'"
+                    style="background: #17a2b8;">Active</button>
+            <button onclick="this.closest('[x-data]')._praxisData.filter = 'completed'"
+                    style="background: #28a745;">Completed</button>
+        </div>
+
+        <div id="advanced-todo-list">
+            <!-- Todos will be rendered here -->
+        </div>
+        
+        <div style="margin-top: 15px; font-size: 14px; color: #666;">
+            <span id="todo-stats">Loading stats...</span>
+        </div>
+    </div>
+
+    <!-- Load Praxis from unpkg CDN -->
+    <script src="https://unpkg.com/@oxog/praxis@latest/dist/praxis.min.js"></script>
+    
+    <script>
+        // Enhanced demo functionality for CDN version
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🌐 Praxis loaded from CDN:', window.praxis);
+            
+            // Enhanced reactivity system
+            function updateAllElements() {
+                // Update x-text elements
+                document.querySelectorAll('[x-text]').forEach(el => {
+                    const expr = el.getAttribute('x-text');
+                    const container = el.closest('[x-data]');
+                    if (container && container._praxisData) {
+                        try {
+                            const value = container._praxisData[expr];
+                            if (value !== undefined) {
+                                el.textContent = value;
+                            }
+                        } catch (e) {
+                            console.warn('Error updating x-text:', expr, e);
+                        }
+                    }
+                });
+
+                // Update x-show elements
+                document.querySelectorAll('[x-show]').forEach(el => {
+                    const expr = el.getAttribute('x-show');
+                    const container = el.closest('[x-data]');
+                    if (container && container._praxisData) {
+                        try {
+                            const show = container._praxisData[expr];
+                            el.style.display = show ? '' : 'none';
+                        } catch (e) {
+                            console.warn('Error updating x-show:', expr, e);
+                        }
+                    }
+                });
+
+                // Render advanced todo list
+                renderAdvancedTodos();
+            }
+
+            // Advanced todo rendering with filtering
+            function renderAdvancedTodos() {
+                const todoContainer = document.getElementById('advanced-todo-list');
+                const statsContainer = document.getElementById('todo-stats');
+                
+                if (todoContainer) {
+                    const container = todoContainer.closest('[x-data]');
+                    if (container && container._praxisData) {
+                        const data = container._praxisData;
+                        const { todos, filter } = data;
+                        
+                        // Filter todos
+                        let filteredTodos = todos;
+                        if (filter === 'active') {
+                            filteredTodos = todos.filter(t => !t.done);
+                        } else if (filter === 'completed') {
+                            filteredTodos = todos.filter(t => t.done);
+                        }
+                        
+                        // Render todos
+                        todoContainer.innerHTML = filteredTodos.map(todo => `
+                            <div class="todo-item" style="background: ${todo.done ? '#f8f9fa' : '#ffffff'}">
+                                <input type="checkbox" ${todo.done ? 'checked' : ''} 
+                                       onchange="
+                                           const data = this.closest('[x-data]')._praxisData;
+                                           const todo = data.todos.find(t => t.id === ${todo.id});
+                                           if (todo) todo.done = this.checked;
+                                       ">
+                                <span style="
+                                    text-decoration: ${todo.done ? 'line-through' : 'none'};
+                                    color: ${todo.done ? '#6c757d' : 'inherit'};
+                                    flex: 1;
+                                ">
+                                    ${todo.text}
+                                </span>
+                                <button onclick="
+                                    const data = this.closest('[x-data]')._praxisData;
+                                    data.todos = data.todos.filter(t => t.id !== ${todo.id});
+                                " style="background: #dc3545; padding: 4px 8px; font-size: 12px;">✕</button>
+                            </div>
+                        `).join('');
+                        
+                        // Update stats
+                        if (statsContainer) {
+                            const total = todos.length;
+                            const completed = todos.filter(t => t.done).length;
+                            const active = total - completed;
+                            statsContainer.innerHTML = `
+                                Total: ${total} | Active: ${active} | Completed: ${completed} | 
+                                Filter: <strong>${filter}</strong>
+                            `;
+                        }
+                    }
+                }
+            }
+
+            // Real-time updates
+            setInterval(updateAllElements, 50);
+            
+            // Initial render
+            updateAllElements();
+            
+            // Show success message
+            setTimeout(() => {
+                console.log('✅ Praxis CDN demo fully loaded and functional!');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+{
+  "name": "@oxog/praxis-webpack-loader",
+  "version": "1.0.0",
+  "description": "Webpack loader for Praxis framework - optimized builds and component loading",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest"
+  },
+  "keywords": [
+    "praxis",
+    "webpack",
+    "loader",
+    "build"
+  ],
+  "author": "PraxisJS Team <team@praxisjs.com>",
+  "license": "MIT",
+  "homepage": "https://praxisjs.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/praxisjs/core.git",
+    "directory": "packages/webpack-loader"
+  },
+  "peerDependencies": {
+    "@oxog/praxis": "^1.0.0",
+    "webpack": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.9.0",
+    "typescript": "^5.3.2",
+    "webpack": "^5.89.0",
+    "vitest": "^1.0.4"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

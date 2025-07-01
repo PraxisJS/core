@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Praxis Demo - Local Build</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .demo-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .counter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .input-demo input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px;
+        }
+        .todo-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            border: 1px solid #eee;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Praxis Framework Demo - Local Build</h1>
+    <p>This demo uses the local dist/praxis.js file to showcase Praxis features.</p>
+
+    <!-- Counter Demo -->
+    <div class="demo-section" x-data="{ count: 0 }">
+        <h2>Counter Demo</h2>
+        <div class="counter">
+            <button onclick="this.closest('[x-data]')._praxisData.count--">-</button>
+            <span x-text="count">0</span>
+            <button onclick="this.closest('[x-data]')._praxisData.count++">+</button>
+        </div>
+        <p>Count: <strong x-text="count">0</strong></p>
+    </div>
+
+    <!-- Show/Hide Demo -->
+    <div class="demo-section" x-data="{ show: true }">
+        <h2>Show/Hide Demo</h2>
+        <button onclick="this.closest('[x-data]')._praxisData.show = !this.closest('[x-data]')._praxisData.show">
+            Toggle
+        </button>
+        <div x-show="show" style="margin-top: 10px; padding: 10px; background: #e7f3ff; border-radius: 4px;">
+            <p>🎉 This content can be toggled!</p>
+        </div>
+    </div>
+
+    <!-- Input Binding Demo -->
+    <div class="demo-section" x-data="{ message: 'Hello Praxis!' }">
+        <h2>Input Binding Demo</h2>
+        <div class="input-demo">
+            <input type="text" 
+                   x-model="message" 
+                   placeholder="Type something..."
+                   oninput="this.closest('[x-data]')._praxisData.message = this.value">
+            <p>You typed: <strong x-text="message">Hello Praxis!</strong></p>
+        </div>
+    </div>
+
+    <!-- Todo List Demo -->
+    <div class="demo-section" x-data="{ 
+        newTodo: '', 
+        todos: [
+            { id: 1, text: 'Learn Praxis', done: false },
+            { id: 2, text: 'Build amazing apps', done: false }
+        ] 
+    }">
+        <h2>Todo List Demo</h2>
+        <div style="margin-bottom: 15px;">
+            <input type="text" 
+                   placeholder="Add new todo..." 
+                   x-model="newTodo"
+                   oninput="this.closest('[x-data]')._praxisData.newTodo = this.value">
+            <button onclick="
+                const data = this.closest('[x-data]')._praxisData;
+                if (data.newTodo.trim()) {
+                    data.todos.push({
+                        id: Date.now(),
+                        text: data.newTodo,
+                        done: false
+                    });
+                    data.newTodo = '';
+                    this.previousElementSibling.value = '';
+                }
+            ">Add</button>
+        </div>
+        <div id="todo-list">
+            <!-- Todos will be rendered here -->
+        </div>
+    </div>
+
+    <!-- Load Praxis -->
+    <script src="dist/praxis.js"></script>
+    
+    <script>
+        // Enhanced demo functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Praxis loaded:', window.praxis);
+            
+            // Manual reactivity for x-text elements
+            function updateTextElements() {
+                document.querySelectorAll('[x-text]').forEach(el => {
+                    const expr = el.getAttribute('x-text');
+                    const container = el.closest('[x-data]');
+                    if (container && container._praxisData) {
+                        try {
+                            const value = container._praxisData[expr];
+                            if (value !== undefined) {
+                                el.textContent = value;
+                            }
+                        } catch (e) {
+                            console.warn('Error updating x-text:', expr, e);
+                        }
+                    }
+                });
+            }
+
+            // Manual reactivity for x-show elements
+            function updateShowElements() {
+                document.querySelectorAll('[x-show]').forEach(el => {
+                    const expr = el.getAttribute('x-show');
+                    const container = el.closest('[x-data]');
+                    if (container && container._praxisData) {
+                        try {
+                            const show = container._praxisData[expr];
+                            el.style.display = show ? '' : 'none';
+                        } catch (e) {
+                            console.warn('Error updating x-show:', expr, e);
+                        }
+                    }
+                });
+            }
+
+            // Render todo list
+            function renderTodos() {
+                const todoContainer = document.querySelector('[x-data] #todo-list');
+                if (todoContainer) {
+                    const data = todoContainer.closest('[x-data]')._praxisData;
+                    if (data && data.todos) {
+                        todoContainer.innerHTML = data.todos.map(todo => `
+                            <div class="todo-item">
+                                <input type="checkbox" ${todo.done ? 'checked' : ''} 
+                                       onchange="
+                                           const data = this.closest('[x-data]')._praxisData;
+                                           const todo = data.todos.find(t => t.id === ${todo.id});
+                                           if (todo) todo.done = this.checked;
+                                       ">
+                                <span style="text-decoration: ${todo.done ? 'line-through' : 'none'}">
+                                    ${todo.text}
+                                </span>
+                                <button onclick="
+                                    const data = this.closest('[x-data]')._praxisData;
+                                    data.todos = data.todos.filter(t => t.id !== ${todo.id});
+                                    renderTodos();
+                                " style="background: #dc3545;">Delete</button>
+                            </div>
+                        `).join('');
+                    }
+                }
+            }
+
+            // Update all reactive elements periodically
+            setInterval(() => {
+                updateTextElements();
+                updateShowElements();
+                renderTodos();
+            }, 100);
+
+            // Initial render
+            updateTextElements();
+            updateShowElements();
+            renderTodos();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Praxis - Signals & Reactivity</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+        .container {
+            background: #16213e;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #f39c12;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .demo-section {
+            background: #0f3460;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid #f39c12;
+        }
+        h2 {
+            color: #f39c12;
+            margin-bottom: 20px;
+        }
+        .signal-box {
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+        button {
+            padding: 10px 20px;
+            background: #f39c12;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin: 5px;
+        }
+        button:hover {
+            background: #e67e22;
+            transform: translateY(-2px);
+        }
+        .value-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+            margin: 10px 0;
+        }
+        input {
+            padding: 8px;
+            background: #1a1a2e;
+            border: 2px solid #f39c12;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 16px;
+            margin: 5px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .card {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .computed-value {
+            color: #2ecc71;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .effect-log {
+            background: #000;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        .log-entry {
+            color: #2ecc71;
+            margin: 2px 0;
+        }
+        code {
+            background: #000;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Signals & Reactivity Demo</h1>
+        
+        <!-- Basic Signal Demo -->
+        <div class="demo-section" x-data="{
+            init() {
+                // Create signals
+                this.count = window.praxis.signal(0);
+                this.message = window.praxis.signal('Hello Praxis!');
+                
+                // Update display function
+                this.updateDisplay = () => {
+                    const countEl = document.getElementById('signal-count');
+                    const msgEl = document.getElementById('signal-message');
+                    if (countEl) countEl.textContent = this.count.value;
+                    if (msgEl) msgEl.textContent = this.message.value;
+                };
+                
+                // Subscribe to changes
+                window.praxis.effect(() => {
+                    this.updateDisplay();
+                });
+                
+                // Initial update
+                this.updateDisplay();
+            },
+            increment() {
+                this.count.value++;
+            },
+            decrement() {
+                this.count.value--;
+            },
+            updateMessage(value) {
+                this.message.value = value;
+            }
+        }">
+            <h2>📡 Basic Signals</h2>
+            <p>Signals are reactive values that notify subscribers when they change.</p>
+            
+            <div class="signal-box">
+                <code>const count = praxis.signal(0);</code>
+            </div>
+            
+            <div class="value-display">
+                Count: <span id="signal-count">0</span>
+            </div>
+            
+            <button @click="increment()">Increment</button>
+            <button @click="decrement()">Decrement</button>
+            <button @click="count.value = 0; updateDisplay()">Reset</button>
+            
+            <div style="margin-top: 20px;">
+                <input 
+                    type="text" 
+                    placeholder="Update message..." 
+                    @input="updateMessage($event.target.value)"
+                >
+                <div class="value-display">
+                    Message: <span id="signal-message">Hello Praxis!</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Computed Values Demo -->
+        <div class="demo-section" x-data="{
+            init() {
+                // Create base signals
+                this.width = window.praxis.signal(10);
+                this.height = window.praxis.signal(20);
+                
+                // Create computed values
+                this.area = window.praxis.computed(() => {
+                    return this.width.value * this.height.value;
+                });
+                
+                this.perimeter = window.praxis.computed(() => {
+                    return 2 * (this.width.value + this.height.value);
+                });
+                
+                this.diagonal = window.praxis.computed(() => {
+                    return Math.sqrt(
+                        Math.pow(this.width.value, 2) + 
+                        Math.pow(this.height.value, 2)
+                    ).toFixed(2);
+                });
+                
+                // Update function
+                this.updateComputedDisplay = () => {
+                    document.getElementById('comp-width').textContent = this.width.value;
+                    document.getElementById('comp-height').textContent = this.height.value;
+                    document.getElementById('comp-area').textContent = this.area.value;
+                    document.getElementById('comp-perimeter').textContent = this.perimeter.value;
+                    document.getElementById('comp-diagonal').textContent = this.diagonal.value;
+                };
+                
+                // Set up effects
+                window.praxis.effect(() => {
+                    this.updateComputedDisplay();
+                });
+            }
+        }">
+            <h2>🧮 Computed Values</h2>
+            <p>Computed values automatically update when their dependencies change.</p>
+            
+            <div class="grid">
+                <div class="card">
+                    <h3>Width</h3>
+                    <div class="value-display" id="comp-width">10</div>
+                    <button @click="width.value++; updateComputedDisplay()">+</button>
+                    <button @click="width.value--; updateComputedDisplay()">-</button>
+                </div>
+                
+                <div class="card">
+                    <h3>Height</h3>
+                    <div class="value-display" id="comp-height">20</div>
+                    <button @click="height.value++; updateComputedDisplay()">+</button>
+                    <button @click="height.value--; updateComputedDisplay()">-</button>
+                </div>
+            </div>
+            
+            <div class="grid">
+                <div class="card">
+                    <h3>Area</h3>
+                    <div class="computed-value" id="comp-area">200</div>
+                    <small>width × height</small>
+                </div>
+                
+                <div class="card">
+                    <h3>Perimeter</h3>
+                    <div class="computed-value" id="comp-perimeter">60</div>
+                    <small>2 × (width + height)</small>
+                </div>
+                
+                <div class="card">
+                    <h3>Diagonal</h3>
+                    <div class="computed-value" id="comp-diagonal">22.36</div>
+                    <small>√(width² + height²)</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Effects Demo -->
+        <div class="demo-section" x-data="{
+            init() {
+                this.temperature = window.praxis.signal(20);
+                this.logs = [];
+                this.effectCount = 0;
+                
+                // Set up effect
+                window.praxis.effect(() => {
+                    const temp = this.temperature.value;
+                    this.effectCount++;
+                    
+                    let status = '';
+                    if (temp < 0) status = '🥶 Freezing!';
+                    else if (temp < 10) status = '❄️ Cold';
+                    else if (temp < 20) status = '🌤️ Cool';
+                    else if (temp < 30) status = '☀️ Warm';
+                    else status = '🔥 Hot!';
+                    
+                    this.logs.unshift({
+                        time: new Date().toLocaleTimeString(),
+                        temp: temp,
+                        status: status,
+                        count: this.effectCount
+                    });
+                    
+                    // Keep only last 10 logs
+                    if (this.logs.length > 10) this.logs.pop();
+                    
+                    this.updateEffectDisplay();
+                });
+                
+                this.updateEffectDisplay = () => {
+                    const tempEl = document.getElementById('effect-temp');
+                    const logEl = document.getElementById('effect-log');
+                    
+                    if (tempEl) tempEl.textContent = this.temperature.value + '°C';
+                    
+                    if (logEl) {
+                        logEl.innerHTML = this.logs.map(log => 
+                            `<div class='log-entry'>[${log.time}] Effect #${log.count}: ${log.temp}°C ${log.status}</div>`
+                        ).join('');
+                    }
+                };
+            },
+            adjustTemp(delta) {
+                this.temperature.value += delta;
+            }
+        }">
+            <h2>🎯 Effects & Side Effects</h2>
+            <p>Effects run automatically when their dependencies change.</p>
+            
+            <div style="text-align: center; margin: 20px 0;">
+                <div class="value-display">
+                    Temperature: <span id="effect-temp">20°C</span>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <button @click="adjustTemp(-10)">-10°C</button>
+                    <button @click="adjustTemp(-1)">-1°C</button>
+                    <button @click="adjustTemp(1)">+1°C</button>
+                    <button @click="adjustTemp(10)">+10°C</button>
+                </div>
+                
+                <button @click="temperature.value = 20; updateEffectDisplay()">Reset to 20°C</button>
+            </div>
+            
+            <div class="effect-log" id="effect-log">
+                <!-- Logs will appear here -->
+            </div>
+        </div>
+
+        <!-- Advanced Example -->
+        <div class="demo-section" x-data="{
+            init() {
+                // Shopping cart example
+                this.items = window.praxis.signal([
+                    { id: 1, name: 'Laptop', price: 999, quantity: 1 },
+                    { id: 2, name: 'Mouse', price: 29, quantity: 2 }
+                ]);
+                
+                this.taxRate = window.praxis.signal(0.08);
+                
+                this.subtotal = window.praxis.computed(() => {
+                    return this.items.value.reduce((sum, item) => 
+                        sum + (item.price * item.quantity), 0
+                    );
+                });
+                
+                this.tax = window.praxis.computed(() => {
+                    return this.subtotal.value * this.taxRate.value;
+                });
+                
+                this.total = window.praxis.computed(() => {
+                    return this.subtotal.value + this.tax.value;
+                });
+                
+                this.updateCartDisplay();
+            },
+            updateQuantity(id, delta) {
+                const items = [...this.items.value];
+                const item = items.find(i => i.id === id);
+                if (item) {
+                    item.quantity = Math.max(0, item.quantity + delta);
+                    this.items.value = items;
+                    this.updateCartDisplay();
+                }
+            },
+            updateCartDisplay() {
+                document.getElementById('cart-subtotal').textContent = '$' + this.subtotal.value.toFixed(2);
+                document.getElementById('cart-tax').textContent = '$' + this.tax.value.toFixed(2);
+                document.getElementById('cart-total').textContent = '$' + this.total.value.toFixed(2);
+                
+                const itemsEl = document.getElementById('cart-items');
+                if (itemsEl) {
+                    itemsEl.innerHTML = this.items.value.map(item => `
+                        <div class='card'>
+                            <h4>${item.name}</h4>
+                            <p>$${item.price} × ${item.quantity} = $${(item.price * item.quantity).toFixed(2)}</p>
+                            <button onclick='this.closest(\"[x-data]\")._praxisData.updateQuantity(${item.id}, -1)'>-</button>
+                            <button onclick='this.closest(\"[x-data]\")._praxisData.updateQuantity(${item.id}, 1)'>+</button>
+                        </div>
+                    `).join('');
+                }
+            }
+        }">
+            <h2>🛒 Real-World Example: Shopping Cart</h2>
+            
+            <div class="grid" id="cart-items">
+                <!-- Items will be rendered here -->
+            </div>
+            
+            <div style="margin-top: 30px; text-align: center;">
+                <div class="card">
+                    <p>Subtotal: <span class="value-display" id="cart-subtotal">$0</span></p>
+                    <p>Tax (8%): <span class="value-display" id="cart-tax">$0</span></p>
+                    <hr style="border-color: #f39c12; margin: 15px 0;">
+                    <p>Total: <span class="computed-value" style="font-size: 28px;" id="cart-total">$0</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../dist/praxis.js"></script>
+</body>
+</html>

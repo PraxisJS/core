@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Praxis Examples</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #f8f9fa;
+        }
+        h1 {
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 50px;
+            font-size: 3em;
+        }
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+        }
+        .example-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 30px;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .example-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+        }
+        .example-card h2 {
+            color: #4299e1;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .example-card p {
+            color: #718096;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #e2e8f0;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-right: 8px;
+            color: #4a5568;
+        }
+        .tag.basic {
+            background: #48bb78;
+            color: white;
+        }
+        .tag.advanced {
+            background: #f56565;
+            color: white;
+        }
+        .tag.integration {
+            background: #9f7aea;
+            color: white;
+        }
+        .tag.performance {
+            background: #ed8936;
+            color: white;
+        }
+        .section {
+            margin-bottom: 50px;
+        }
+        .section-title {
+            color: #2d3748;
+            font-size: 2em;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #4299e1;
+            padding-bottom: 10px;
+        }
+        .hero {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        .hero p {
+            font-size: 1.2em;
+            color: #718096;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .cdn-info {
+            background: #e6fffa;
+            border: 2px solid #38b2ac;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+        }
+        .cdn-info code {
+            background: #2d3748;
+            color: #48bb78;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>🚀 Praxis Framework Examples</h1>
+        <p>Explore interactive examples showcasing the power and simplicity of Praxis - the high-performance reactive JavaScript framework</p>
+    </div>
+
+    <div class="cdn-info">
+        <h3>📦 Quick Start with CDN</h3>
+        <p>Include Praxis in your project:</p>
+        <code>&lt;script src="https://unpkg.com/@oxog/praxis@latest/dist/praxis.min.js"&gt;&lt;/script&gt;</code>
+    </div>
+
+    <div class="section">
+        <h2 class="section-title">📚 Basic Examples</h2>
+        <div class="examples-grid">
+            <a href="basic/counter.html" class="example-card">
+                <h2>🔢 Counter</h2>
+                <p>Learn the basics of reactivity with a simple counter that demonstrates data binding and event handling.</p>
+                <div>
+                    <span class="tag basic">Basic</span>
+                    <span class="tag">Interactive</span>
+                </div>
+            </a>
+
+            <a href="basic/todo-list.html" class="example-card">
+                <h2>📝 Todo List</h2>
+                <p>Build a fully functional todo application with filtering, adding, removing, and marking items as complete.</p>
+                <div>
+                    <span class="tag basic">Basic</span>
+                    <span class="tag">CRUD</span>
+                </div>
+            </a>
+
+            <a href="basic/form-binding.html" class="example-card">
+                <h2>📋 Form Binding</h2>
+                <p>Master two-way data binding with various form controls including text inputs, checkboxes, radio buttons, and more.</p>
+                <div>
+                    <span class="tag basic">Basic</span>
+                    <span class="tag">Forms</span>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 class="section-title">⚡ Advanced Examples</h2>
+        <div class="examples-grid">
+            <a href="advanced/signals.html" class="example-card">
+                <h2>📡 Signals & Reactivity</h2>
+                <p>Deep dive into Praxis's signal-based reactivity system with computed values, effects, and real-world examples.</p>
+                <div>
+                    <span class="tag advanced">Advanced</span>
+                    <span class="tag">Signals</span>
+                </div>
+            </a>
+
+            <a href="advanced/components.html" class="example-card">
+                <h2>🧩 Components</h2>
+                <p>Learn how to build reusable components with props, slots, and composition patterns.</p>
+                <div>
+                    <span class="tag advanced">Advanced</span>
+                    <span class="tag">Coming Soon</span>
+                </div>
+            </a>
+
+            <a href="advanced/animations.html" class="example-card">
+                <h2>🎨 Animations</h2>
+                <p>Create smooth animations and transitions using Praxis's built-in animation utilities.</p>
+                <div>
+                    <span class="tag advanced">Advanced</span>
+                    <span class="tag">Coming Soon</span>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 class="section-title">🔌 Integration Examples</h2>
+        <div class="examples-grid">
+            <a href="integration/api-fetch.html" class="example-card">
+                <h2>🌐 API Integration</h2>
+                <p>Learn how to fetch data from APIs, handle loading states, and display dynamic content.</p>
+                <div>
+                    <span class="tag integration">Integration</span>
+                    <span class="tag">Coming Soon</span>
+                </div>
+            </a>
+
+            <a href="integration/third-party.html" class="example-card">
+                <h2>🔗 Third-Party Libraries</h2>
+                <p>Integrate Praxis with popular libraries like Chart.js, Leaflet, and more.</p>
+                <div>
+                    <span class="tag integration">Integration</span>
+                    <span class="tag">Coming Soon</span>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 class="section-title">🚀 Performance Examples</h2>
+        <div class="examples-grid">
+            <a href="performance/large-lists.html" class="example-card">
+                <h2>📊 Large Lists</h2>
+                <p>Handle large datasets efficiently with virtualization and optimized rendering techniques.</p>
+                <div>
+                    <span class="tag performance">Performance</span>
+                    <span class="tag">Coming Soon</span>
+                </div>
+            </a>
+
+            <a href="performance/benchmarks.html" class="example-card">
+                <h2>⏱️ Benchmarks</h2>
+                <p>Compare Praxis performance against other frameworks with interactive benchmarks.</p>
+                <div>
+                    <span class="tag performance">Performance</span>
+                    <span class="tag">Coming Soon</span>
+                </div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
