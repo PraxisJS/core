@@ -410,22 +410,28 @@ export function createCrossTabStore<T>(
 ): { state: Signal<T>; broadcast: (state: T) => void } {
   const state = signal(initialState);
   const channel = new ReactiveChannelDual(channelName);
-  
+  let isRemoteUpdate = false;
+
   // Listen for updates from other tabs
   channel.on('state-update', (newState: T) => {
+    // Set flag to prevent broadcast loop
+    isRemoteUpdate = true;
     state.value = newState;
+    isRemoteUpdate = false;
   });
-  
+
   // Broadcast state changes to other tabs
   const broadcast = (newState: T) => {
     channel.send('state-update', newState);
   };
-  
-  // Auto-broadcast when state changes
+
+  // Auto-broadcast when state changes (only for local changes)
   effect(() => {
-    broadcast(state.value);
+    if (!isRemoteUpdate) {
+      broadcast(state.value);
+    }
   });
-  
+
   return { state, broadcast };
 }
 
