@@ -60,9 +60,11 @@ class StoreImpl<T = any> implements Store<T> {
 
   constructor(id: string, definition: StoreDefinition<T>) {
     this.id = id;
-    this.initialState = definition.state();
-    this.state = reactive(this.initialState);
-    
+    const stateValue = definition.state();
+    // Deep clone the initial state to prevent mutation issues
+    this.initialState = this.deepClone(stateValue);
+    this.state = reactive(stateValue);
+
     this.setupGetters(definition.getters || {});
     this.setupActions(definition.actions || {});
     this.setupModules(definition.modules || {});
@@ -129,9 +131,13 @@ class StoreImpl<T = any> implements Store<T> {
     this.subscribers.get(path)!.push(subscription);
 
     // Set up reactive effect to watch the path
+    let oldValue = this.getValueAtPath(path);
     const dispose = effect(() => {
-      const value = this.getValueAtPath(path);
-      // The effect will re-run when dependencies change
+      const newValue = this.getValueAtPath(path);
+      if (newValue !== oldValue) {
+        callback(newValue, oldValue);
+        oldValue = newValue;
+      }
     });
 
     subscription.unsubscribe = () => {
@@ -200,13 +206,65 @@ class StoreImpl<T = any> implements Store<T> {
   }
 
   private getCurrentState(): T {
-    return JSON.parse(JSON.stringify(this.state));
+    return this.deepClone(this.state);
   }
 
   private applyState(newState: T): void {
+    // Remove keys not in newState
+    Object.keys(this.state).forEach(key => {
+      if (!(key in newState)) {
+        delete (this.state as any)[key];
+      }
+    });
+
+    // Apply all keys from newState
     Object.keys(newState).forEach(key => {
       (this.state as any)[key] = (newState as any)[key];
     });
+  }
+
+  private deepClone<U>(obj: U): U {
+    // Use structuredClone if available (modern browsers/Node 17+)
+    if (typeof structuredClone !== 'undefined') {
+      try {
+        return structuredClone(obj);
+      } catch {
+        // Fall through to manual clone if structuredClone fails
+      }
+    }
+
+    // Fallback for older environments
+    if (obj === null || typeof obj !== 'object') {
+      return obj;
+    }
+
+    if (obj instanceof Date) {
+      return new Date(obj.getTime()) as any;
+    }
+
+    if (obj instanceof Array) {
+      return obj.map(item => this.deepClone(item)) as any;
+    }
+
+    if (obj instanceof Set) {
+      return new Set(Array.from(obj).map(item => this.deepClone(item))) as any;
+    }
+
+    if (obj instanceof Map) {
+      return new Map(Array.from(obj.entries()).map(([k, v]) => [this.deepClone(k), this.deepClone(v)])) as any;
+    }
+
+    if (typeof obj === 'object') {
+      const cloned: any = {};
+      for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          cloned[key] = this.deepClone((obj as any)[key]);
+        }
+      }
+      return cloned;
+    }
+
+    return obj;
   }
 
   private recordAction(action: StoreAction): void {

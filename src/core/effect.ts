@@ -12,24 +12,29 @@ export class EffectImpl implements Effect {
   private cleanup?: () => void;
   private isDisposed = false;
   private isExecuting = false;
+  private subscriptions = new Set<() => void>();
 
   constructor(private fn: () => void | (() => void)) {}
 
   execute(): void {
     if (this.isDisposed || this.isExecuting) return;
-    
+
     this.isExecuting = true;
-    
+
     if (this.cleanup) {
       this.cleanup();
       this.cleanup = undefined;
     }
-    
+
+    // Clean up old subscriptions before creating new ones
+    this.subscriptions.forEach(unsub => unsub());
+    this.subscriptions.clear();
+
     this.dependencies.clear();
-    
+
     const prevObserver = getCurrentObserver();
     setCurrentObserver(this);
-    
+
     try {
       const result = this.fn();
       if (typeof result === 'function') {
@@ -39,26 +44,32 @@ export class EffectImpl implements Effect {
       setCurrentObserver(prevObserver);
       this.isExecuting = false;
     }
-    
+
+    // Create new subscriptions and store unsubscribe functions
     this.dependencies.forEach(signal => {
-      signal.subscribe(() => {
+      const unsub = signal.subscribe(() => {
         if (!this.isDisposed) {
           scheduleUpdate(() => this.execute());
         }
       });
+      this.subscriptions.add(unsub);
     });
   }
 
   dispose(): void {
     if (this.isDisposed) return;
-    
+
     this.isDisposed = true;
-    
+
+    // Clean up all subscriptions
+    this.subscriptions.forEach(unsub => unsub());
+    this.subscriptions.clear();
+
     if (this.cleanup) {
       this.cleanup();
       this.cleanup = undefined;
     }
-    
+
     this.dependencies.clear();
   }
 }

@@ -33,14 +33,15 @@ export class HTMLSanitizer {
       return String(html);
     }
 
-    // Create a temporary container
-    const container = document.createElement('div');
-    container.innerHTML = html;
+    // Use DOMParser to parse HTML without executing scripts
+    // This is safer than using innerHTML which executes scripts immediately
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
 
-    // Recursively sanitize
-    this.sanitizeNode(container);
+    // Recursively sanitize the body
+    this.sanitizeNode(doc.body);
 
-    return container.innerHTML;
+    return doc.body.innerHTML;
   }
 
   private sanitizeNode(node: Element): void {

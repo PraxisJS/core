@@ -52,6 +52,13 @@ export class AccessibilityManager {
   private originalFocus?: HTMLElement;
   private skipLinkContainer?: HTMLElement;
 
+  // MEMORY LEAK FIX: Store event listeners for cleanup
+  private eventListeners: Array<{
+    target: EventTarget;
+    type: string;
+    handler: EventListenerOrEventListenerObject;
+  }> = [];
+
   constructor(config: AccessibilityConfig = {}) {
     this.config = this.mergeDefaultConfig(config);
     this.initialize();
@@ -77,6 +84,16 @@ export class AccessibilityManager {
       },
       ...config
     };
+  }
+
+  // MEMORY LEAK FIX: Helper to track event listeners for cleanup
+  private addEventListener(
+    target: EventTarget,
+    type: string,
+    handler: EventListenerOrEventListenerObject
+  ): void {
+    target.addEventListener(type, handler);
+    this.eventListeners.push({ target, type, handler });
   }
 
   private initialize(): void {
@@ -264,19 +281,21 @@ export class AccessibilityManager {
 
   // Keyboard Navigation
   private setupKeyboardNavigation(): void {
-    document.addEventListener('keydown', (event) => {
-      const target = event.target as HTMLElement;
-      
+    const keydownHandler = (event: Event) => {
+      const target = (event as KeyboardEvent).target as HTMLElement;
+
       // Handle roving tabindex
       if (target.hasAttribute('data-roving-tabindex')) {
-        this.handleRovingTabindex(event, target);
+        this.handleRovingTabindex(event as KeyboardEvent, target);
       }
 
       // Handle list navigation
       if (target.closest('[role="listbox"], [role="menu"], [role="tablist"]')) {
-        this.handleListNavigation(event);
+        this.handleListNavigation(event as KeyboardEvent);
       }
-    });
+    };
+
+    this.addEventListener(document, 'keydown', keydownHandler);
   }
 
   private handleRovingTabindex(event: KeyboardEvent, current: HTMLElement): void {
@@ -395,22 +414,26 @@ export class AccessibilityManager {
       transition: 'top 0.2s'
     });
 
-    link.addEventListener('focus', () => {
+    const focusHandler = () => {
       link.style.top = '0';
-    });
+    };
 
-    link.addEventListener('blur', () => {
+    const blurHandler = () => {
       link.style.top = '-100px';
-    });
+    };
 
-    link.addEventListener('click', (event) => {
+    const clickHandler = (event: Event) => {
       event.preventDefault();
       const targetElement = document.querySelector(target);
       if (targetElement) {
         (targetElement as HTMLElement).focus();
         (targetElement as HTMLElement).scrollIntoView({ behavior: 'smooth' });
       }
-    });
+    };
+
+    this.addEventListener(link, 'focus', focusHandler);
+    this.addEventListener(link, 'blur', blurHandler);
+    this.addEventListener(link, 'click', clickHandler);
 
     this.skipLinkContainer.appendChild(link);
   }
@@ -418,15 +441,18 @@ export class AccessibilityManager {
   // Focus Indicators
   private setupFocusIndicators(): void {
     // Add focus-visible polyfill behavior
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Tab') {
+    const keydownHandler = (event: Event) => {
+      if ((event as KeyboardEvent).key === 'Tab') {
         document.body.classList.add('keyboard-navigation');
       }
-    });
+    };
 
-    document.addEventListener('mousedown', () => {
+    const mousedownHandler = () => {
       document.body.classList.remove('keyboard-navigation');
-    });
+    };
+
+    this.addEventListener(document, 'keydown', keydownHandler);
+    this.addEventListener(document, 'mousedown', mousedownHandler);
 
     // Add custom focus styles
     const style = document.createElement('style');
@@ -460,7 +486,7 @@ export class AccessibilityManager {
   // Media Query Support
   private setupReducedMotionSupport(): void {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    
+
     const updateMotionPreference = () => {
       if (mediaQuery.matches) {
         document.documentElement.classList.add('reduce-motion');
@@ -471,12 +497,12 @@ export class AccessibilityManager {
     };
 
     updateMotionPreference();
-    mediaQuery.addEventListener('change', updateMotionPreference);
+    this.addEventListener(mediaQuery, 'change', updateMotionPreference);
   }
 
   private setupHighContrastSupport(): void {
     const mediaQuery = window.matchMedia('(prefers-contrast: high)');
-    
+
     const updateContrastPreference = () => {
       if (mediaQuery.matches) {
         document.documentElement.classList.add('high-contrast');
@@ -487,7 +513,7 @@ export class AccessibilityManager {
     };
 
     updateContrastPreference();
-    mediaQuery.addEventListener('change', updateContrastPreference);
+    this.addEventListener(mediaQuery, 'change', updateContrastPreference);
   }
 
   // Color Contrast Validation
@@ -607,14 +633,20 @@ export class AccessibilityManager {
 
   // Cleanup
   dispose(): void {
+    // MEMORY LEAK FIX: Remove all tracked event listeners
+    this.eventListeners.forEach(({ target, type, handler }) => {
+      target.removeEventListener(type, handler);
+    });
+    this.eventListeners = [];
+
     if (this.liveRegion) {
       document.body.removeChild(this.liveRegion);
     }
-    
+
     if (this.skipLinkContainer) {
       document.body.removeChild(this.skipLinkContainer);
     }
-    
+
     // Clean up focus traps
     document.querySelectorAll('[data-roving-container]').forEach(container => {
       if ((container as any)._cleanupFocusTrap) {

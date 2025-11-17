@@ -29,7 +29,7 @@ export class ComponentImpl implements Component {
   public children = new Set<Component>();
   
   private watchers = new Map<string, Array<(newValue: any, oldValue: any) => void>>();
-  private isDestroyed = false;
+  private _isDestroyed = false;
 
   constructor(public element: Element) {}
 
@@ -46,7 +46,7 @@ export class ComponentImpl implements Component {
   }
 
   destroyed(): void {
-    this.isDestroyed = true;
+    this._isDestroyed = true;
     this.children.forEach(child => child.destroyed());
     this.children.clear();
     this.watchers.clear();
@@ -121,6 +121,6 @@ export class ComponentImpl implements Component {
   }
 
   isDestroyed(): boolean {
-    return this.isDestroyed;
+    return this._isDestroyed;
   }
 }

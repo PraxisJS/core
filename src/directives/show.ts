@@ -7,12 +7,15 @@ export class ShowDirective extends BaseDirective {
   private originalDisplay: string = '';
 
   init(): void {
-    this.originalDisplay = (this.context.element as HTMLElement).style.display || '';
-    
+    const element = this.context.element as HTMLElement;
+    const inlineDisplay = element.style.display;
+    // If originally hidden inline, use empty string (let CSS decide)
+    this.originalDisplay = (inlineDisplay === 'none' || !inlineDisplay) ? '' : inlineDisplay;
+
     this.createEffect(() => {
       const shouldShow = Boolean(this.evaluateExpression());
       const element = this.context.element as HTMLElement;
-      
+
       if (shouldShow) {
         element.style.display = this.originalDisplay;
       } else {

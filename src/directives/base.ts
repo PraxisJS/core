@@ -53,6 +53,10 @@ export abstract class BaseDirective implements Directive {
     return globalEvaluator.evaluate(expression, evaluationContext);
   }
 
+  protected evaluateWithContext(expression: string, context: ExpressionContext): any {
+    return globalEvaluator.evaluate(expression, context);
+  }
+
   protected buildEvaluationContext(): ExpressionContext {
     const context: ExpressionContext = {
       $el: this.context.element,

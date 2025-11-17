@@ -72,7 +72,8 @@ export class VirtualDOM {
       } else {
         // No key, try to match by position
         const oldNode = oldNodes[newIndex];
-        if (oldNode && !usedOldIndices.has(newIndex)) {
+        if (oldNode && !usedOldIndices.has(newIndex) && typeof oldNode === 'object' && typeof newNode === 'object') {
+          // Both are VirtualNode objects (not strings)
           if (!this.areNodesEqual(oldNode, newNode)) {
             results.push({
               type: 'update',
@@ -106,25 +107,30 @@ export class VirtualDOM {
     return results;
   }
   
-  static areNodesEqual(a: VirtualNode, b: VirtualNode): boolean {
+  static areNodesEqual(a: VirtualNode | string, b: VirtualNode | string): boolean {
+    // Handle string nodes (text nodes)
+    if (typeof a === 'string' || typeof b === 'string') {
+      return a === b;
+    }
+
     if (a.type !== b.type || a.key !== b.key) {
       return false;
     }
-    
+
     // Compare props
     const aProps = Object.keys(a.props);
     const bProps = Object.keys(b.props);
-    
+
     if (aProps.length !== bProps.length) {
       return false;
     }
-    
+
     for (const key of aProps) {
       if (a.props[key] !== b.props[key]) {
         return false;
       }
     }
-    
+
     return true;
   }
   
