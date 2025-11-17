@@ -68,3 +68,7 @@ export function getCurrentObserver(): Effect | null {
 export function setTracking(tracking: boolean): void {
   isTracking = tracking;
 }
+
+export function getTracking(): boolean {
+  return isTracking;
+}

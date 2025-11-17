@@ -54,7 +54,6 @@ export class DOMBinder {
       affectedComponents.forEach(component => {
         component.updated(mutations);
       });
-      }
     });
 
     this.mutationObserver.observe(document.body, {

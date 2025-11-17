@@ -1,4 +1,4 @@
-import { Signal, setCurrentObserver, getCurrentObserver, setTracking } from './signal.js';
+import { Signal, setCurrentObserver, getCurrentObserver, setTracking, getTracking } from './signal.js';
 import { Effect } from './effect.js';
 import { scheduleUpdate } from './scheduler.js';
 
@@ -13,6 +13,7 @@ export class ComputedImpl<T> implements ComputedSignal<T>, Effect {
   public dependencies = new Set<Signal<any>>();
   private subscribers = new Set<() => void>();
   private isDisposed = false;
+  private subscriptions = new Set<() => void>();
 
   constructor(private computeFn: () => T) {
     this.compute();
@@ -31,7 +32,7 @@ export class ComputedImpl<T> implements ComputedSignal<T>, Effect {
   }
 
   peek(): T {
-    const wasTracking = setTracking;
+    const wasTracking = getTracking();
     setTracking(false);
     const value = this.value;
     setTracking(wasTracking);
@@ -50,44 +51,46 @@ export class ComputedImpl<T> implements ComputedSignal<T>, Effect {
   dispose(): void {
     if (this.isDisposed) return;
     this.isDisposed = true;
+
+    // Clean up all subscriptions
+    this.subscriptions.forEach(unsub => unsub());
+    this.subscriptions.clear();
+
     this.dependencies.clear();
     this.subscribers.clear();
   }
 
   private compute(): void {
     if (this._isComputing || this.isDisposed) return;
-    
+
     this._isComputing = true;
     this._isStale = false;
-    
-    this.dependencies.forEach(dep => {
-      dep.subscribe(() => {
-        if (!this._isStale && !this.isDisposed) {
-          this._isStale = true;
-          scheduleUpdate(() => this.notifySubscribers());
-        }
-      });
-    });
-    
+
+    // Clean up old subscriptions before creating new ones
+    this.subscriptions.forEach(unsub => unsub());
+    this.subscriptions.clear();
+
     this.dependencies.clear();
-    
+
     const prevObserver = getCurrentObserver();
     setCurrentObserver(this);
-    
+
     try {
       this._value = this.computeFn();
     } finally {
       setCurrentObserver(prevObserver);
       this._isComputing = false;
     }
-    
+
+    // Create new subscriptions and store unsubscribe functions
     this.dependencies.forEach(signal => {
-      signal.subscribe(() => {
+      const unsub = signal.subscribe(() => {
         if (!this.isDisposed) {
           this._isStale = true;
           scheduleUpdate(() => this.notifySubscribers());
         }
       });
+      this.subscriptions.add(unsub);
     });
   }
 
