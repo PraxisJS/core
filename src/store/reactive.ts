@@ -54,6 +54,14 @@ class ReactiveHandler<T extends object> implements ProxyHandler<T> {
       return true;
     }
 
+    if (prop === '__readonly') {
+      return this.options.readonly === true;
+    }
+
+    if (prop === '__target') {
+      return target;
+    }
+
     if (prop === '__reactive_signals') {
       return this.signals;
     }
