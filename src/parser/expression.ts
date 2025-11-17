@@ -213,6 +213,14 @@ class ExpressionParser {
     `;
 
     try {
+      // ⚠️ SECURITY WARNING: Using Function constructor is equivalent to eval()
+      // This is inherently unsafe and should be replaced with a proper AST-based
+      // expression parser in production. Current mitigations include:
+      // - Blacklist validation of dangerous patterns
+      // - Restricted context (no global scope access)
+      // - Timeout protection (though limited effectiveness)
+      // RECOMMENDATION: Replace with libraries like 'expr-eval' or implement
+      // a safe subset DSL parser for production use.
       const func = new Function(...contextKeys, functionBody);
       return func(...contextValues);
     } catch (error) {

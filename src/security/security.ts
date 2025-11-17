@@ -237,7 +237,10 @@ export class SecurityManager {
         throw new Error('Expression contains dangerous patterns');
       }
 
-      // Use Function constructor with restricted context
+      // ⚠️ SECURITY WARNING: Function constructor usage
+      // This is equivalent to eval() and inherently unsafe. While we implement
+      // mitigations (pattern checking, restricted context), these can be bypassed.
+      // TODO: Replace with a proper safe expression evaluator in future versions.
       const func = new Function(...Object.keys(safeContext), `return (${expression})`);
       return func(...Object.values(safeContext));
     } catch (error) {
