@@ -51,6 +51,19 @@ export class OnDirective extends BaseDirective {
   }
 
   private applyModifiers(event: Event): void {
+    // Self - check first before applying other modifiers
+    if (this.hasModifier('self') && event.target !== this.context.element) {
+      return;
+    }
+
+    // Key modifiers for keyboard events - check before prevent/stop
+    if (event instanceof KeyboardEvent) {
+      const shouldContinue = this.applyKeyModifiers(event);
+      if (!shouldContinue) {
+        return;
+      }
+    }
+
     // Prevent default
     if (this.hasModifier('prevent')) {
       event.preventDefault();
@@ -65,33 +78,23 @@ export class OnDirective extends BaseDirective {
     if (this.hasModifier('stop-immediate')) {
       event.stopImmediatePropagation();
     }
-
-    // Self - only trigger if event target is the element itself
-    if (this.hasModifier('self') && event.target !== this.context.element) {
-      return;
-    }
-
-    // Key modifiers for keyboard events
-    if (event instanceof KeyboardEvent) {
-      this.applyKeyModifiers(event);
-    }
   }
 
-  private applyKeyModifiers(event: KeyboardEvent): void {
-    const keyModifiers = this.context.modifiers.filter(modifier => 
+  private applyKeyModifiers(event: KeyboardEvent): boolean {
+    const keyModifiers = this.context.modifiers.filter(modifier =>
       ['enter', 'tab', 'delete', 'esc', 'space', 'up', 'down', 'left', 'right', 'ctrl', 'alt', 'shift', 'meta'].includes(modifier)
     );
 
-    if (keyModifiers.length === 0) return;
+    if (keyModifiers.length === 0) return true;
 
     const keyMap: Record<string, string> = {
       'enter': 'Enter',
-      'tab': 'Tab', 
+      'tab': 'Tab',
       'delete': 'Delete',
       'esc': 'Escape',
       'space': ' ',
       'up': 'ArrowUp',
-      'down': 'ArrowDown', 
+      'down': 'ArrowDown',
       'left': 'ArrowLeft',
       'right': 'ArrowRight'
     };
@@ -100,17 +103,15 @@ export class OnDirective extends BaseDirective {
     const regularKeys = keyModifiers.filter(m => !systemModifiers.includes(m));
     const requiredSystemModifiers = keyModifiers.filter(m => systemModifiers.includes(m));
 
-    // Check system modifiers
+    // Check system modifiers - return false if they don't match (skip handler, don't prevent)
     for (const modifier of requiredSystemModifiers) {
       const property = `${modifier}Key` as keyof KeyboardEvent;
       if (!event[property]) {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
+        return false;
       }
     }
 
-    // Check regular keys
+    // Check regular keys - return false if they don't match (skip handler, don't prevent)
     if (regularKeys.length > 0) {
       const matchedKey = regularKeys.some(modifier => {
         const expectedKey = keyMap[modifier] || modifier;
@@ -118,11 +119,11 @@ export class OnDirective extends BaseDirective {
       });
 
       if (!matchedKey) {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
+        return false;
       }
     }
+
+    return true;
   }
 
   private debounce(fn: EventListener): EventListener {
