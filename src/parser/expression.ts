@@ -188,26 +188,29 @@ class ExpressionParser {
       'const Function = undefined'
     ];
     
+    // ⚠️ TIMEOUT PROTECTION LIMITATION:
+    // Synchronous code execution in JavaScript cannot be reliably timed out.
+    // The timeout check below runs BEFORE expression evaluation, not during it.
+    // This means infinite loops in the expression CANNOT be caught.
+    //
+    // Proper solutions require:
+    // 1. Web Workers with termination capability (async, complex)
+    // 2. AST-based evaluator with step counting (requires parser replacement)
+    // 3. Transpilation with injected checks (performance overhead)
+    //
+    // Current implementation provides error handling only, not DoS protection.
+
     const functionBody = `
       "use strict";
       ${securityMeasures.join('; ')};
       ${allowedGlobals.join('; ')};
-      
-      // Add timeout protection
-      const startTime = Date.now();
-      const EXECUTION_TIMEOUT = 1000; // 1 second
-      
-      // Wrap in try-catch with timeout check
+
+      // Wrap in try-catch for error handling
+      // NOTE: This does NOT protect against infinite loops or DoS attacks
       try {
-        if (Date.now() - startTime > EXECUTION_TIMEOUT) {
-          throw new Error('Expression execution timeout');
-        }
         return ${expression};
       } catch (error) {
-        if (error.message === 'Expression execution timeout') {
-          throw error;
-        }
-        // Re-throw other errors for debugging
+        // Re-throw errors for debugging with context
         throw new Error('Expression evaluation failed: ' + error.message);
       }
     `;
@@ -216,11 +219,17 @@ class ExpressionParser {
       // ⚠️ SECURITY WARNING: Using Function constructor is equivalent to eval()
       // This is inherently unsafe and should be replaced with a proper AST-based
       // expression parser in production. Current mitigations include:
-      // - Blacklist validation of dangerous patterns
+      // - Blacklist validation of dangerous patterns (bypassable)
       // - Restricted context (no global scope access)
-      // - Timeout protection (though limited effectiveness)
-      // RECOMMENDATION: Replace with libraries like 'expr-eval' or implement
-      // a safe subset DSL parser for production use.
+      // - Error handling (but NO DoS protection against infinite loops)
+      //
+      // CRITICAL LIMITATIONS:
+      // - Code injection still possible via clever exploits
+      // - No timeout protection for infinite loops
+      // - Blacklists can be bypassed
+      //
+      // RECOMMENDATION: Replace with libraries like 'expr-eval', 'jsep', or
+      // implement a safe subset DSL parser for production use.
       const func = new Function(...contextKeys, functionBody);
       return func(...contextValues);
     } catch (error) {
