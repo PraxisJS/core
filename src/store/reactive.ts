@@ -41,6 +41,9 @@ export interface ReactiveOptions {
   shallow?: boolean;
 }
 
+// Track objects currently being made reactive to prevent circular reference stack overflow
+const reactiveStack = new WeakSet<object>();
+
 class ReactiveHandler<T extends object> implements ProxyHandler<T> {
   private signals = new Map<string | symbol, Signal<any>>();
   private options: ReactiveOptions;
@@ -142,8 +145,23 @@ export function reactive<T extends object>(target: T, options?: ReactiveOptions)
     return target as SignalifiedObject<T>;
   }
 
-  const handler = new ReactiveHandler<T>(options);
-  return new Proxy(target, handler) as SignalifiedObject<T>;
+  // Prevent stack overflow from circular references
+  // If this object is currently being made reactive up the call stack, return it as-is
+  if (reactiveStack.has(target)) {
+    console.warn('[PraxisJS Warning] Circular reference detected in reactive object. Breaking cycle to prevent stack overflow.');
+    return target as SignalifiedObject<T>;
+  }
+
+  // Add to stack before processing
+  reactiveStack.add(target);
+
+  try {
+    const handler = new ReactiveHandler<T>(options);
+    return new Proxy(target, handler) as SignalifiedObject<T>;
+  } finally {
+    // Remove from stack after processing (even if error occurs)
+    reactiveStack.delete(target);
+  }
 }
 
 export function readonly<T extends object>(target: T): SignalifiedObject<T> {
