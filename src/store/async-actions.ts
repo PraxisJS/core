@@ -105,12 +105,22 @@ export class AsyncAction<TArgs extends any[] = any[], TResult = any> {
       try {
         // Add timeout if specified
         if (this.options.timeout) {
+          // MEMORY LEAK FIX: Store timeout ID so we can clean it up
+          let timeoutId: number | undefined;
+
           return await Promise.race([
             this.asyncFn(...args),
             new Promise<never>((_, reject) => {
-              setTimeout(() => reject(new Error('Action timeout')), this.options.timeout);
+              timeoutId = window.setTimeout(() => {
+                reject(new Error('Action timeout'));
+              }, this.options.timeout);
             })
-          ]);
+          ]).finally(() => {
+            // Clean up timeout whether we succeeded or failed
+            if (timeoutId !== undefined) {
+              clearTimeout(timeoutId);
+            }
+          });
         } else {
           return await this.asyncFn(...args);
         }
@@ -123,8 +133,23 @@ export class AsyncAction<TArgs extends any[] = any[], TResult = any> {
         if (retry && this.retryCount < retry.attempts) {
           this.retryCount++;
           const delay = this.calculateRetryDelay(retry, this.retryCount);
-          
-          await new Promise(resolve => setTimeout(resolve, delay));
+
+          // MEMORY LEAK FIX: Clean up timer if action is aborted during retry delay
+          await new Promise<void>((resolve, reject) => {
+            const timerId = setTimeout(resolve, delay);
+
+            // If aborted during delay, clear timer and reject
+            if (signal.aborted) {
+              clearTimeout(timerId);
+              reject(new Error('Action aborted'));
+            }
+          });
+
+          // Check again after delay in case aborted while waiting
+          if (signal.aborted) {
+            throw new Error('Action aborted');
+          }
+
           continue;
         }
 
