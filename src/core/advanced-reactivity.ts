@@ -30,8 +30,8 @@ export interface ReadonlyRef<T> extends Omit<Signal<T>, 'value'> {
 // Ref implementation
 class RefImpl<T> implements Ref<T> {
   public readonly __isRef = true;
-  private _value: T;
-  private subscribers = new Set<() => void>();
+  protected _value: T;
+  protected subscribers = new Set<() => void>();
 
   constructor(value: T) {
     this._value = value;
@@ -59,7 +59,7 @@ class RefImpl<T> implements Ref<T> {
     return () => this.subscribers.delete(fn);
   }
 
-  private notify(): void {
+  protected notify(): void {
     this.subscribers.forEach(fn => fn());
   }
 }
@@ -70,12 +70,8 @@ class ShallowRefImpl<T> extends RefImpl<T> implements ShallowRef<T> {
   set value(newValue: T) {
     // Shallow ref only triggers on reference change, not deep changes
     if (this._value === newValue) return;
-    (this as any)._value = newValue;
+    this._value = newValue;
     this.notify();
-  }
-
-  private notify(): void {
-    this.subscribers.forEach(fn => fn());
   }
 }
 

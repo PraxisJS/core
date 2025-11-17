@@ -129,9 +129,13 @@ class StoreImpl<T = any> implements Store<T> {
     this.subscribers.get(path)!.push(subscription);
 
     // Set up reactive effect to watch the path
+    let oldValue = this.getValueAtPath(path);
     const dispose = effect(() => {
-      const value = this.getValueAtPath(path);
-      // The effect will re-run when dependencies change
+      const newValue = this.getValueAtPath(path);
+      if (newValue !== oldValue) {
+        callback(newValue, oldValue);
+        oldValue = newValue;
+      }
     });
 
     subscription.unsubscribe = () => {
