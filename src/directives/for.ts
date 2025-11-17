@@ -121,14 +121,14 @@ export class ForDirective extends BaseDirective {
   private evaluateInItemContext(expression: string, item: any, index: number): any {
     const itemVar = this.getItemVariable();
     const indexVar = this.getIndexVariable();
-    
+
     const context = {
       ...this.buildEvaluationContext(),
       [itemVar]: item,
       [indexVar]: index
     };
-    
-    return this.evaluateExpression(expression);
+
+    return this.evaluateWithContext(expression, context);
   }
 
   private getItemVariable(): string {
